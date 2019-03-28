@@ -12,3 +12,6 @@ Create a user interface that intuitively communicates network activity and downl
 Store media on the device file system Use Core Data for local persistence of an object structure
 Why is this project meaningful to my career?
 The project will give you practice with powerful mechanisms for persisting data locally on a device. Storing media and retrieving it later is an essential skill for any iOS developer.
+
+#requirement
+https://docs.google.com/document/d/1j-UIi1jJGuNWKoEjEk09wwYf4ebefnwcVrUYbiHh1MI/pub?embedded=true
