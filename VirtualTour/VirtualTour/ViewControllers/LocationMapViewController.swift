@@ -9,10 +9,33 @@
 import UIKit
 
 class LocationMapViewController: UIViewController {
-
+    var editMode = false
+    var rightBarButton:UIBarButtonItem?
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        // Add the right - Edit / Done button
+    }
+    
+    private func addNavigationButton(){
+        rightBarButton = UIBarButtonItem(image: nil, style: UIBarButtonItem.Style.plain, target:nil, action: #selector(tabEditToShowDeletePinButton))
+        rightBarButton?.title = "Edit"
+        navigationItem.setRightBarButton(rightBarButton, animated: false)
+    }
+    
+    @objc private func tabEditToShowDeletePinButton() {
+        editMode = true
+        print("Tab Edit!")
+        if editMode {
+            rightBarButton?.title = "Done"
+        }
+        else {
+            rightBarButton?.title = "Edit"
+        }
+        
     }
     
     /*

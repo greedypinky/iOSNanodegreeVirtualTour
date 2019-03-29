@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		F76AED69224C9C2B002458F9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F76AED68224C9C2B002458F9 /* AppDelegate.swift */; };
-		F76AED6B224C9C2B002458F9 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F76AED6A224C9C2B002458F9 /* ViewController.swift */; };
 		F76AED6E224C9C2B002458F9 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F76AED6C224C9C2B002458F9 /* Main.storyboard */; };
 		F76AED71224C9C2B002458F9 /* VirtualTour.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = F76AED6F224C9C2B002458F9 /* VirtualTour.xcdatamodeld */; };
 		F76AED73224C9C2E002458F9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F76AED72224C9C2E002458F9 /* Assets.xcassets */; };
@@ -39,7 +38,6 @@
 /* Begin PBXFileReference section */
 		F76AED65224C9C2B002458F9 /* VirtualTour.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VirtualTour.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F76AED68224C9C2B002458F9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		F76AED6A224C9C2B002458F9 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		F76AED6D224C9C2B002458F9 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		F76AED70224C9C2B002458F9 /* VirtualTour.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = VirtualTour.xcdatamodel; sourceTree = "<group>"; };
 		F76AED72224C9C2E002458F9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -107,7 +105,6 @@
 				F76AED9A224C9D4D002458F9 /* Model */,
 				F76AED99224C9D3A002458F9 /* ViewControllers */,
 				F76AED68224C9C2B002458F9 /* AppDelegate.swift */,
-				F76AED6A224C9C2B002458F9 /* ViewController.swift */,
 				F76AED6C224C9C2B002458F9 /* Main.storyboard */,
 				F76AED72224C9C2E002458F9 /* Assets.xcassets */,
 				F76AED74224C9C2E002458F9 /* LaunchScreen.storyboard */,
@@ -314,7 +311,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				F76AEDA0224CA02F002458F9 /* LocationMapViewController.swift in Sources */,
-				F76AED6B224C9C2B002458F9 /* ViewController.swift in Sources */,
 				F76AED69224C9C2B002458F9 /* AppDelegate.swift in Sources */,
 				F76AEDA2224CA097002458F9 /* PhotoAlbumViewController.swift in Sources */,
 				F76AED71224C9C2B002458F9 /* VirtualTour.xcdatamodeld in Sources */,
