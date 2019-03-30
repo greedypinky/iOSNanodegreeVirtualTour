@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6915E23A224EDF8E00483A3C /* ClientRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6915E239224EDF8E00483A3C /* ClientRequest.swift */; };
+		6915E23C224EE3F500483A3C /* PhotoSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6915E23B224EE3F500483A3C /* PhotoSearch.swift */; };
 		F76AED69224C9C2B002458F9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F76AED68224C9C2B002458F9 /* AppDelegate.swift */; };
 		F76AED6E224C9C2B002458F9 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F76AED6C224C9C2B002458F9 /* Main.storyboard */; };
 		F76AED71224C9C2B002458F9 /* VirtualTour.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = F76AED6F224C9C2B002458F9 /* VirtualTour.xcdatamodeld */; };
@@ -36,6 +38,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		6915E239224EDF8E00483A3C /* ClientRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ClientRequest.swift; path = VirtualTour/ViewControllers/ClientRequest.swift; sourceTree = SOURCE_ROOT; };
+		6915E23B224EE3F500483A3C /* PhotoSearch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PhotoSearch.swift; path = VirtualTour/ViewControllers/PhotoSearch.swift; sourceTree = SOURCE_ROOT; };
 		F76AED65224C9C2B002458F9 /* VirtualTour.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VirtualTour.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F76AED68224C9C2B002458F9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		F76AED6D224C9C2B002458F9 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -154,6 +158,7 @@
 		F76AED9B224C9D5F002458F9 /* Request */ = {
 			isa = PBXGroup;
 			children = (
+				6915E23B224EE3F500483A3C /* PhotoSearch.swift */,
 			);
 			path = Request;
 			sourceTree = "<group>";
@@ -175,6 +180,7 @@
 		F76AED9E224C9FDF002458F9 /* FlickerRequest */ = {
 			isa = PBXGroup;
 			children = (
+				6915E239224EDF8E00483A3C /* ClientRequest.swift */,
 			);
 			path = FlickerRequest;
 			sourceTree = "<group>";
@@ -310,6 +316,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6915E23C224EE3F500483A3C /* PhotoSearch.swift in Sources */,
+				6915E23A224EDF8E00483A3C /* ClientRequest.swift in Sources */,
 				F76AEDA0224CA02F002458F9 /* LocationMapViewController.swift in Sources */,
 				F76AED69224C9C2B002458F9 /* AppDelegate.swift in Sources */,
 				F76AEDA2224CA097002458F9 /* PhotoAlbumViewController.swift in Sources */,
