@@ -9,7 +9,7 @@
 import UIKit
 import MapKit
 
-class LocationMapViewController: UIViewController {
+class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate{
     
     @IBOutlet weak var mapView: MKMapView!
     
@@ -21,12 +21,20 @@ class LocationMapViewController: UIViewController {
         // Do any additional setup after loading the view.
     }
     
+
+    
     override func viewWillAppear(_ animated: Bool) {
+        
+        navigationController?.title = "Virtual Tourist"
+        addNavigationButton()
+        
         // Add the right - Edit / Done button
         var longPress = UILongPressGestureRecognizer(target: self, action: #selector(addPinToTheMap))
         longPress.minimumPressDuration = 1.0
         mapView.addGestureRecognizer(longPress)
     }
+    
+    
     
     private func addNavigationButton(){
         rightBarButton = UIBarButtonItem(image: nil, style: UIBarButtonItem.Style.plain, target:nil, action: #selector(tabEditToShowDeletePinButton))
@@ -35,9 +43,35 @@ class LocationMapViewController: UIViewController {
     }
     
     
-    @objc private func addPinToTheMap() {
+    @objc private func addPinToTheMap(longPressGesture:UIGestureRecognizer) {
+        let touchPointAtMapView = longPressGesture.location(in: mapView)
+        // transfer the touchpoint to map coordinate
+        let mapCoordinate = mapView.convert(touchPointAtMapView, toCoordinateFrom: mapView)
+        let location = CLLocationCoordinate2D(latitude: mapCoordinate.latitude, longitude: mapCoordinate.longitude)
         print("add pin to map! how ??")
+        let annotation = MKPointAnnotation()
+        annotation.coordinate = location
+        mapView.addAnnotation(annotation)
+        
     }
+    
+    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+        // for Pin rendering
+        let annotationID = "pin"
+        var pinView = mapView.dequeueReusableAnnotationView(withIdentifier: annotationID) as? MKPinAnnotationView
+        if pinView == nil {
+            pinView = MKPinAnnotationView()
+            pinView?.canShowCallout = true
+            pinView?.pinTintColor = .red
+            pinView?.rightCalloutAccessoryView = UIButton(type:.detailDisclosure)
+            
+        } else {
+            pinView?.annotation = annotation
+        }
+        return pinView
+    }
+    
+    
     
     @objc private func tabEditToShowDeletePinButton() {
         editMode = true
