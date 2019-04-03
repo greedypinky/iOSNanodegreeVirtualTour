@@ -7,8 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		6915E23A224EDF8E00483A3C /* ClientRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6915E239224EDF8E00483A3C /* ClientRequest.swift */; };
+		6915E23A224EDF8E00483A3C /* VirtualTourClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6915E239224EDF8E00483A3C /* VirtualTourClient.swift */; };
 		6915E23C224EE3F500483A3C /* PhotoSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6915E23B224EE3F500483A3C /* PhotoSearch.swift */; };
+		6915E23E2253F93800483A3C /* PhotoSearchResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6915E23D2253F93800483A3C /* PhotoSearchResponse.swift */; };
 		F76AED69224C9C2B002458F9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F76AED68224C9C2B002458F9 /* AppDelegate.swift */; };
 		F76AED6E224C9C2B002458F9 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F76AED6C224C9C2B002458F9 /* Main.storyboard */; };
 		F76AED71224C9C2B002458F9 /* VirtualTour.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = F76AED6F224C9C2B002458F9 /* VirtualTour.xcdatamodeld */; };
@@ -38,8 +39,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		6915E239224EDF8E00483A3C /* ClientRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ClientRequest.swift; path = VirtualTour/ViewControllers/ClientRequest.swift; sourceTree = SOURCE_ROOT; };
+		6915E239224EDF8E00483A3C /* VirtualTourClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = VirtualTourClient.swift; path = VirtualTour/ViewControllers/VirtualTourClient.swift; sourceTree = SOURCE_ROOT; };
 		6915E23B224EE3F500483A3C /* PhotoSearch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PhotoSearch.swift; path = VirtualTour/ViewControllers/PhotoSearch.swift; sourceTree = SOURCE_ROOT; };
+		6915E23D2253F93800483A3C /* PhotoSearchResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PhotoSearchResponse.swift; path = VirtualTour/ViewControllers/PhotoSearchResponse.swift; sourceTree = SOURCE_ROOT; };
 		F76AED65224C9C2B002458F9 /* VirtualTour.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VirtualTour.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F76AED68224C9C2B002458F9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		F76AED6D224C9C2B002458F9 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -105,7 +107,7 @@
 		F76AED67224C9C2B002458F9 /* VirtualTour */ = {
 			isa = PBXGroup;
 			children = (
-				F76AED9E224C9FDF002458F9 /* FlickerRequest */,
+				F76AED9E224C9FDF002458F9 /* FlickrRequest */,
 				F76AED9A224C9D4D002458F9 /* Model */,
 				F76AED99224C9D3A002458F9 /* ViewControllers */,
 				F76AED68224C9C2B002458F9 /* AppDelegate.swift */,
@@ -166,6 +168,7 @@
 		F76AED9C224C9D6D002458F9 /* Response */ = {
 			isa = PBXGroup;
 			children = (
+				6915E23D2253F93800483A3C /* PhotoSearchResponse.swift */,
 			);
 			path = Response;
 			sourceTree = "<group>";
@@ -177,12 +180,12 @@
 			path = Data;
 			sourceTree = "<group>";
 		};
-		F76AED9E224C9FDF002458F9 /* FlickerRequest */ = {
+		F76AED9E224C9FDF002458F9 /* FlickrRequest */ = {
 			isa = PBXGroup;
 			children = (
-				6915E239224EDF8E00483A3C /* ClientRequest.swift */,
+				6915E239224EDF8E00483A3C /* VirtualTourClient.swift */,
 			);
-			path = FlickerRequest;
+			path = FlickrRequest;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -316,8 +319,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6915E23E2253F93800483A3C /* PhotoSearchResponse.swift in Sources */,
 				6915E23C224EE3F500483A3C /* PhotoSearch.swift in Sources */,
-				6915E23A224EDF8E00483A3C /* ClientRequest.swift in Sources */,
+				6915E23A224EDF8E00483A3C /* VirtualTourClient.swift in Sources */,
 				F76AEDA0224CA02F002458F9 /* LocationMapViewController.swift in Sources */,
 				F76AED69224C9C2B002458F9 /* AppDelegate.swift in Sources */,
 				F76AEDA2224CA097002458F9 /* PhotoAlbumViewController.swift in Sources */,

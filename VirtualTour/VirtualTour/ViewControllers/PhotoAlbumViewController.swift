@@ -7,11 +7,15 @@
 //
 
 import UIKit
+import MapKit
 
 class PhotoAlbumViewController: UICollectionViewController {
     
+    @IBOutlet weak var mapView: MKMapView!
     private let reuseIdentifier = "photoCell"
-
+    @IBOutlet weak var photoCollectionView: UICollectionView!
+    @IBOutlet weak var newCollectionButton: UIButton!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 

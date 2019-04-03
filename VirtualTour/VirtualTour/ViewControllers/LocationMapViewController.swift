@@ -7,8 +7,13 @@
 //
 
 import UIKit
+import MapKit
 
 class LocationMapViewController: UIViewController {
+    
+    @IBOutlet weak var mapView: MKMapView!
+    
+    
     var editMode = false
     var rightBarButton:UIBarButtonItem?
     override func viewDidLoad() {
@@ -18,12 +23,20 @@ class LocationMapViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         // Add the right - Edit / Done button
+        var longPress = UILongPressGestureRecognizer(target: self, action: #selector(addPinToTheMap))
+        longPress.minimumPressDuration = 1.0
+        mapView.addGestureRecognizer(longPress)
     }
     
     private func addNavigationButton(){
         rightBarButton = UIBarButtonItem(image: nil, style: UIBarButtonItem.Style.plain, target:nil, action: #selector(tabEditToShowDeletePinButton))
         rightBarButton?.title = "Edit"
         navigationItem.setRightBarButton(rightBarButton, animated: false)
+    }
+    
+    
+    @objc private func addPinToTheMap() {
+        print("add pin to map! how ??")
     }
     
     @objc private func tabEditToShowDeletePinButton() {

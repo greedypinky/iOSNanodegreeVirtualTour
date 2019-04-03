@@ -33,6 +33,7 @@
                     </view>
                     <navigationItem key="navigationItem" id="t8P-ZS-ajq"/>
                     <connections>
+                        <outlet property="mapView" destination="qOg-QJ-muN" id="Uzv-lk-H3f"/>
                         <segue destination="tye-MI-Peg" kind="presentation" identifier="showPhotoAlbum" id="vxo-3P-pvf"/>
                     </connections>
                 </viewController>
@@ -109,10 +110,15 @@
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="OmH-Cw-Uwb"/>
                     </view>
+                    <connections>
+                        <outlet property="mapView" destination="wUl-5v-gWo" id="LVa-xz-AWW"/>
+                        <outlet property="newCollectionButton" destination="e60-F9-CWT" id="gRz-1d-DdD"/>
+                        <outlet property="photoCollectionView" destination="YiV-od-geL" id="iyk-f4-n5Q"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dCC-L4-aD6" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1860" y="90.404797601199405"/>
+            <point key="canvasLocation" x="1860" y="79"/>
         </scene>
     </scenes>
 </document>
