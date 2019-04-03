@@ -36,7 +36,7 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
     }
     
     private func addNavigationButton(){
-        rightBarButton = UIBarButtonItem(image: nil, style: UIBarButtonItem.Style.plain, target:nil, action: #selector(tabEditToShowDeletePinButton))
+        rightBarButton = UIBarButtonItem(image: nil, style: UIBarButtonItem.Style.plain, target:self, action: #selector(tabEditToShowDeletePinButton))
         rightBarButton?.title = "Edit"
         navigationItem.setRightBarButton(rightBarButton, animated: false)
         
