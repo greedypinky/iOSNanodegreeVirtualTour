@@ -25,21 +25,21 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
     
     override func viewWillAppear(_ animated: Bool) {
         
-        navigationController?.title = "Virtual Tourist"
+        navigationItem.title = "Virtual Tourist"
         addNavigationButton()
+        
         
         // Add the right - Edit / Done button
         var longPress = UILongPressGestureRecognizer(target: self, action: #selector(addPinToTheMap))
-        longPress.minimumPressDuration = 1.0
+        longPress.minimumPressDuration = 0.5
         mapView.addGestureRecognizer(longPress)
     }
-    
-    
     
     private func addNavigationButton(){
         rightBarButton = UIBarButtonItem(image: nil, style: UIBarButtonItem.Style.plain, target:nil, action: #selector(tabEditToShowDeletePinButton))
         rightBarButton?.title = "Edit"
         navigationItem.setRightBarButton(rightBarButton, animated: false)
+        
     }
     
     
@@ -73,10 +73,9 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
     
     
     
-    @objc private func tabEditToShowDeletePinButton() {
-        editMode = true
-        print("Tab Edit!")
-        if editMode {
+    @IBAction func tabEditToShowDeletePinButton() {
+        print("tab edit!")
+        if rightBarButton?.title == "Edit" {
             rightBarButton?.title = "Done"
         }
         else {
