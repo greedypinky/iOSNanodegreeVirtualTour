@@ -13,6 +13,12 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
     
     @IBOutlet weak var mapView: MKMapView!
     
+    @IBOutlet weak var deletePinButton: UIButton!
+    
+    // TODO: Delete the pin from the mapview
+//    @IBAction func tabPinToDelete(_ sender: Any) {
+//        print("Delete pin")
+//    }
     
     var editMode = false
     var rightBarButton:UIBarButtonItem?
@@ -21,13 +27,11 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
         // Do any additional setup after loading the view.
     }
     
-
-    
     override func viewWillAppear(_ animated: Bool) {
         
         navigationItem.title = "Virtual Tourist"
         addNavigationButton()
-        
+        deletePinButton.isHidden = true
         
         // Add the right - Edit / Done button
         var longPress = UILongPressGestureRecognizer(target: self, action: #selector(addPinToTheMap))
@@ -51,6 +55,7 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
         print("add pin to map! how ??")
         let annotation = MKPointAnnotation()
         annotation.coordinate = location
+        // TODO: need to add the annotation info into CORE DATA
         mapView.addAnnotation(annotation)
         
     }
@@ -71,15 +76,21 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
         return pinView
     }
     
+    func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
+        // TODO: when in Edit mode and user select the pin
+        // Remove it from the MapView!
+    }
     
     
-    @IBAction func tabEditToShowDeletePinButton() {
+    @objc func tabEditToShowDeletePinButton() {
         print("tab edit!")
         if rightBarButton?.title == "Edit" {
             rightBarButton?.title = "Done"
+            deletePinButton.isHidden = false
         }
         else {
             rightBarButton?.title = "Edit"
+            deletePinButton.isHidden = true
         }
         
     }

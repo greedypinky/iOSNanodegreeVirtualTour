@@ -21,18 +21,30 @@
                             <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="qOg-QJ-muN">
                                 <rect key="frame" x="10" y="74" width="355" height="583"/>
                             </mapView>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="VqA-22-ERS">
+                                <rect key="frame" x="10" y="617" width="355" height="40"/>
+                                <color key="backgroundColor" red="1" green="0.1857388616" blue="0.57339501380000002" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="40" id="vkw-4V-jlV"/>
+                                </constraints>
+                                <state key="normal" title="Tap Pins to Delete"/>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
                             <constraint firstItem="qOg-QJ-muN" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="10" id="F85-Xi-7Tv"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="VqA-22-ERS" secondAttribute="bottom" constant="10" id="U2w-qJ-kLH"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="VqA-22-ERS" secondAttribute="trailing" constant="10" id="XDh-BA-eo8"/>
                             <constraint firstItem="qOg-QJ-muN" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="10" id="YlK-cM-eid"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="qOg-QJ-muN" secondAttribute="bottom" constant="10" id="avb-T3-n3Z"/>
+                            <constraint firstItem="VqA-22-ERS" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="10" id="eJy-sh-CN2"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="qOg-QJ-muN" secondAttribute="trailing" constant="10" id="fgi-z7-Msb"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                     </view>
                     <navigationItem key="navigationItem" id="t8P-ZS-ajq"/>
                     <connections>
+                        <outlet property="deletePinButton" destination="VqA-22-ERS" id="SkP-qI-552"/>
                         <outlet property="mapView" destination="qOg-QJ-muN" id="Uzv-lk-H3f"/>
                         <segue destination="tye-MI-Peg" kind="presentation" identifier="showPhotoAlbum" id="vxo-3P-pvf"/>
                     </connections>
