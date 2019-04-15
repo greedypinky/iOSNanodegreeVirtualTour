@@ -16,10 +16,17 @@ class PhotoAlbumViewController: UICollectionViewController {
     @IBOutlet weak var photoCollectionView: UICollectionView!
     @IBOutlet weak var newCollectionButton: UIButton!
     
+    let placeholderPic = "https://picsum.photos/200"
+    var album:Album!
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
         // Do any additional setup after loading the view.
+        
+        // TODO: Request Flickr Photos from the info we get from the PIN
+        
     }
     
 
@@ -27,19 +34,22 @@ class PhotoAlbumViewController: UICollectionViewController {
     
     override func numberOfSections(in collectionView: UICollectionView) -> Int {
         // #warning Incomplete implementation, return the number of sections
-        return 0
+        return 1
     }
     
     
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         // #warning Incomplete implementation, return the number of items
-        return 0
+        // @NSManaged public var photos: NSSet?
+        return album.photos?.count ?? 0
+        // return 0
     }
     
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath)
         
-        // Configure the cell
+        // Configure set the cell with photo
+        
         
         return cell
     }
@@ -75,5 +85,19 @@ class PhotoAlbumViewController: UICollectionViewController {
      }
      */
     
+    // Album operations on Photos
+    /*
+        @objc(addPhotosObject:)
+        @NSManaged public func addToPhotos(_ value: Photo)
+     
+        @objc(removePhotosObject:)
+        @NSManaged public func removeFromPhotos(_ value: Photo)
+     
+        @objc(addPhotos:)
+        @NSManaged public func addToPhotos(_ values: NSSet)
+     
+        @objc(removePhotos:)
+        @NSManaged public func removeFromPhotos(_ values: NSSet)
+     */
 
 }

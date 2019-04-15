@@ -8,10 +8,19 @@
 
 import Foundation
 
-struct photoSearch:Codable {
+struct FlickrAPIKey {
+    
+    static let key = "Key: b6717100c12e0bec49e0b9dcbec347fb"
+    
+    static let secret = "dca01acfc8e0a8ab"
+    static let methodName = "flickr.photos.search"
+}
+
+struct PhotoSearch:Codable {
     
     var lat:String?
     var lon:String?
+    var api_key:String=FlickrAPIKey.key
     var in_gallery:Bool?=false
     var per_page:Int?=100
     
