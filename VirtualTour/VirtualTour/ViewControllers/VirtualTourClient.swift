@@ -41,10 +41,33 @@ class VirtualTourClient {
         let downloadTask = URLSession.shared.dataTask(with: request) { (data, response, error) in
             // guard if there is data
             // otherwise return the alert error
+            // first guard no error
+            guard error == nil else {
+                completionHandler(nil, error)
+                return
+            }
             
+            // second guard we have data
+            guard let data = data else {
+                completionHandler(nil, error)
+                return
+            }
             
+            // we have to decode the data
+            let jsonDecoder = JSONDecoder()
+            do {
+              let decodedData = try jsonDecoder.decode(ResponseType.self, from: data)
+                DispatchQueue.main.async {
+                    // handle the decoded data
+                    completionHandler(decodedData,nil)
+                }
+            } catch let decodeErr{
+                DispatchQueue.main.async {
+                    // handle the decoded data
+                    completionHandler(nil, decodeErr)
+                }
+            }
         }
-        
     }
 
     
