@@ -27,9 +27,9 @@ class VirtualTourClient {
      var lat:String?
      var lon:String?
      var in_gallery:Bool?=false
-     var per_page:Int?=100 lat:String?
+     var per_page:Int?=100
     */
-    func photoGetRequest<RequestType:Encodable,ResponseType:Decodable>(photoSearch:RequestType, responseType: ResponseType.Type,completionHandler: @escaping (ResponseType?,Error?) -> Void) {
+    class func photoGetRequest<RequestType:Encodable,ResponseType:Decodable>(photoSearch:RequestType, responseType: ResponseType.Type,completionHandler: @escaping (ResponseType?,Error?) -> Void) {
             // add
         
         let endpoint:URL = FlickrEndpoint.getSearch().url

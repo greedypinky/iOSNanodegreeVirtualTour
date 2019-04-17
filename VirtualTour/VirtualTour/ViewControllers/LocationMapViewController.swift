@@ -15,13 +15,12 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
     
     @IBOutlet weak var deletePinButton: UIButton!
     
-    // TODO: Delete the pin from the mapview
-//    @IBAction func tabPinToDelete(_ sender: Any) {
-//        print("Delete pin")
-//    }
-    
     var editMode = false
     var rightBarButton:UIBarButtonItem?
+    
+    var tabLocationLongtitude:Double?
+    var tabLocationLatitude:Double?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
@@ -35,8 +34,15 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
         
         // Add the right - Edit / Done button
         var longPress = UILongPressGestureRecognizer(target: self, action: #selector(addPinToTheMap))
+        
+        // Tapping and holding the map drops a new pin. Users can place any number of pins on the map.
         longPress.minimumPressDuration = 0.5
         mapView.addGestureRecognizer(longPress)
+        
+        // When a pin is tapped, the app will navigate to the Photo Album view associated with the pin.
+        var tabGesture = UITapGestureRecognizer(target: self, action: #selector(searchPhotosByPin))
+        
+        mapView.addGestureRecognizer(tabGesture)
     }
     
     private func addNavigationButton(){
@@ -46,8 +52,28 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
         
     }
     
+    @objc private func searchPhotosByPin(tabGesture:UIGestureRecognizer) {
+        
+       let touchPointAtMapView = tabGesture.location(in: mapView)
+       let mapCoordinate = mapView.convert(touchPointAtMapView, toCoordinateFrom: mapView)
+        
+       let location = CLLocationCoordinate2D(latitude: mapCoordinate.latitude, longitude: mapCoordinate.longitude)
+        
+        tabLocationLongtitude = location.longitude
+        tabLocationLatitude = location.latitude
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        // prepare data for navigate
+        if segue.identifier == "showPhotoAlbum" {
+            let photoAlbumVC  = segue.destination as! PhotoAlbumViewController
+            photoAlbumVC.lat = tabLocationLatitude!
+            photoAlbumVC.lon = tabLocationLongtitude!
+        }
+    }
     
     @objc private func addPinToTheMap(longPressGesture:UIGestureRecognizer) {
+       
         let touchPointAtMapView = longPressGesture.location(in: mapView)
         // transfer the touchpoint to map coordinate
         let mapCoordinate = mapView.convert(touchPointAtMapView, toCoordinateFrom: mapView)
@@ -55,8 +81,13 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
         print("add pin to map! how ??")
         let annotation = MKPointAnnotation()
         annotation.coordinate = location
-        // TODO: need to add the annotation info into CORE DATA
-        mapView.addAnnotation(annotation)
+    
+        if deletePinButton.isHidden {
+            mapView.addAnnotation(annotation)
+        } else {
+            // TODO: remove the annotation from the mapView
+            mapView.removeAnnotation(annotation)
+        }
         
     }
     
@@ -79,7 +110,9 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
         // TODO: when in Edit mode and user select the pin
         // Remove it from the MapView!
+       
     }
+    
     
     
     @objc func tabEditToShowDeletePinButton() {

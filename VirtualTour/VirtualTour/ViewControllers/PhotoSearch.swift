@@ -17,10 +17,9 @@ struct FlickrAPIKey {
 }
 
 struct PhotoSearch:Codable {
-    
-    var lat:String?
-    var lon:String?
-    var api_key:String=FlickrAPIKey.key
+    var lat:String
+    var lon:String
+    var api_key:String
     var in_gallery:Bool?=false
     var per_page:Int?=100
     

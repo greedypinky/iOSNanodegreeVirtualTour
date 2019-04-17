@@ -15,16 +15,15 @@ import Foundation
  */
 
 
-struct photos:Codable {
+struct PhotoSearchResponse:Decodable {
     let page:String
     let pages:String
     let perpage:String
     let total:String
-    let photos:[photo]
+    let photos:[FlickrPhoto]
 }
 
-struct photo:Codable {
-    
+struct FlickrPhoto:Decodable {
     let id:String
     let owner:String
     let secret:String

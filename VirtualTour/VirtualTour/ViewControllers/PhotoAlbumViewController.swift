@@ -11,24 +11,41 @@ import MapKit
 
 class PhotoAlbumViewController: UICollectionViewController {
     
+    
     @IBOutlet weak var mapView: MKMapView!
     private let reuseIdentifier = "photoCell"
     @IBOutlet weak var photoCollectionView: UICollectionView!
     @IBOutlet weak var newCollectionButton: UIButton!
+    let placeholder:String = "photoPlaceHolder"
     
     let placeholderPic = "https://picsum.photos/200"
     var album:Album!
+    var lat:Double?=0.0
+    var lon:Double?=0.0
+    var per_page:Int?=100
     
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        // Do any additional setup after loading the view.
-        
-        // TODO: Request Flickr Photos from the info we get from the PIN
-        
+//
+//        let photoSearch = PhotoSearch(lat: lat!, lon: lon!, api_key: FlickrAPIKey.key, in_gallery: true, per_page: per_page)
+//        // TODO: Request Flickr Photos from the info we get from the PIN
+//
+//        VirtualTourClient.photoGetRequest(photoSearch: photoSearch, responseType: PhotoSearchResponse.self, completionHandler: handleGetResponse(res:error:))
     }
     
+    private func sendGetRequest(page:String) {
+//        let photoSearch = PhotoSearch(lat: lat!, lon: lon!, api_key: FlickrAPIKey.key, in_gallery: true, per_page: per_page)
+//        // TODO: Request Flickr Photos from the info we get from the PIN
+//
+//        VirtualTourClient.photoGetRequest(photoSearch: photoSearch, responseType: PhotoSearchResponse.self, completionHandler: handleGetResponse(res:error:))
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        newCollectionButton.isHidden = true
+        newCollectionButton.isEnabled = false
+        
+    }
 
     // MARK: UICollectionViewDataSource
     
@@ -46,12 +63,13 @@ class PhotoAlbumViewController: UICollectionViewController {
     }
     
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath)
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as? PhotoCollectionViewCell
         
         // Configure set the cell with photo
+        // photoPlaceHolder
+        cell?.flickrImageView.image = UIImage(named: placeholder)
         
-        
-        return cell
+        return cell!
     }
     
     // MARK: UICollectionViewDelegate
@@ -100,4 +118,27 @@ class PhotoAlbumViewController: UICollectionViewController {
         @NSManaged public func removeFromPhotos(_ values: NSSet)
      */
 
+    func handleGetResponse(res:PhotoSearchResponse?, error:Error?) {
+        guard let response = res else {
+            let ac = UIAlertController(title: "Search Flickr photos", message: error?.localizedDescription, preferredStyle: UIAlertController.Style.alert)
+            let action = UIAlertAction(title: "OK", style: UIAlertAction.Style.default) { (action) in
+                // tab OK to dismiss Alert Controller
+                self.dismiss(animated: true, completion: nil)
+            }
+            ac.addAction(action)
+            present(ac, animated: true, completion: nil)
+         return
+        }
+        
+        // reload the Collection View
+        photoCollectionView.reloadData()
+        // we need to show 'New Collection' button
+        newCollectionButton.isHidden = false
+        newCollectionButton.isEnabled = true
+    }
+    
+    // fetch the next page
+    @IBAction func getNewCollection(_ sender: Any) {
+        // TODO: fetch the next available page?
+    }
 }
