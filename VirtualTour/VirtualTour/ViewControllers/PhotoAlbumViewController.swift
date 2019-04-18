@@ -17,13 +17,19 @@ class PhotoAlbumViewController: UICollectionViewController {
     @IBOutlet weak var photoCollectionView: UICollectionView!
     @IBOutlet weak var newCollectionButton: UIButton!
     let placeholder:String = "photoPlaceHolder"
+    let removeButtonLabel = "Remove Selected Pictures"
+    let defaultButtonLabel = "New Collection"
     
     let placeholderPic = "https://picsum.photos/200"
     var album:Album!
     var lat:Double?=0.0
     var lon:Double?=0.0
     var per_page:Int?=100
-    
+    var removePhotos:[IndexPath]?
+    /**
+     If no images are found a “No Images” label will be displayed.
+     If there are images, then they will be displayed in a collection view.
+    */
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -34,7 +40,10 @@ class PhotoAlbumViewController: UICollectionViewController {
 //        VirtualTourClient.photoGetRequest(photoSearch: photoSearch, responseType: PhotoSearchResponse.self, completionHandler: handleGetResponse(res:error:))
     }
     
-    private func sendGetRequest(page:String) {
+    /**
+     The app should determine how many images are available for the pin location, and display a placeholder image for each.
+     */
+    private func sendGetRequest() {
 //        let photoSearch = PhotoSearch(lat: lat!, lon: lon!, api_key: FlickrAPIKey.key, in_gallery: true, per_page: per_page)
 //        // TODO: Request Flickr Photos from the info we get from the PIN
 //
@@ -44,7 +53,8 @@ class PhotoAlbumViewController: UICollectionViewController {
     override func viewWillAppear(_ animated: Bool) {
         newCollectionButton.isHidden = true
         newCollectionButton.isEnabled = false
-        
+        // Add the location pin for the MapView
+        addPin()
     }
 
     // MARK: UICollectionViewDataSource
@@ -81,12 +91,33 @@ class PhotoAlbumViewController: UICollectionViewController {
      }
      */
     
+    override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        // TODO: add removal of the item from Collection View
+        // select will just grey out the cell
+        // update the button label
+        //collectionView.deleteItems(at: [indexPath])
+        toggleButtonLabel()
+        if newCollectionButton.titleLabel?.text == removeButtonLabel {
+            removePhotos?.append(indexPath)
+            // TODO: how to make the cell grey ??
+             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as? PhotoCollectionViewCell
+            cell?.isOpaque = true
+        } else {
+            // TODO: remove the photo to be deleted
+             removePhotos?.append(indexPath)
+            // if the list count is zero reset the button to be the default button label
+            if removePhotos?.count == 0 {
+                newCollectionButton.titleLabel?.text = defaultButtonLabel
+            }
+        }
+    }
+    
     /*
      // Uncomment this method to specify if the specified item should be selected
      override func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
      return true
-     }
-     */
+     } */
+    
     
     /*
      // Uncomment these methods to specify if an action menu should be displayed for the specified item, and react to actions performed on the item
@@ -126,7 +157,7 @@ class PhotoAlbumViewController: UICollectionViewController {
                 self.dismiss(animated: true, completion: nil)
             }
             ac.addAction(action)
-            present(ac, animated: true, completion: nil)
+            self.present(ac, animated: true, completion: nil)
          return
         }
         
@@ -137,8 +168,35 @@ class PhotoAlbumViewController: UICollectionViewController {
         newCollectionButton.isEnabled = true
     }
     
-    // fetch the next page
+    // When tab on New Collection or
     @IBAction func getNewCollection(_ sender: Any) {
-        // TODO: fetch the next available page?
+        if newCollectionButton.titleLabel?.text == defaultButtonLabel {
+            // fetch new collection
+            sendGetRequest()
+            photoCollectionView.reloadData()
+        } else {
+            // remove the cell
+            photoCollectionView.deleteItems(at: removePhotos!)
+            photoCollectionView.reloadData()
+        }
+    }
+    
+    private func addPin() {
+        let coordinate = CLLocationCoordinate2D(latitude: lat!, longitude: lon!)
+        let annotation =  MKPointAnnotation()
+        let region = MKCoordinateRegion(center: coordinate, span: MKCoordinateSpan(latitudeDelta: 0.1,longitudeDelta: 0.1))
+        annotation.coordinate = coordinate
+        mapView.addAnnotation(annotation)
+        mapView.setRegion(region, animated: true)
+    }
+    
+    
+    private func toggleButtonLabel() {
+        
+        if newCollectionButton.titleLabel?.text == defaultButtonLabel {
+            newCollectionButton.titleLabel?.text = removeButtonLabel
+        } else {
+            newCollectionButton.titleLabel?.text = defaultButtonLabel
+        }
     }
 }
