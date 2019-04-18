@@ -40,7 +40,7 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
         mapView.addGestureRecognizer(longPress)
         
         // When a pin is tapped, the app will navigate to the Photo Album view associated with the pin.
-        var tabGesture = UITapGestureRecognizer(target: self, action: #selector(searchPhotosByPin))
+        let tabGesture = UITapGestureRecognizer(target: self, action: #selector(searchPhotosByPin))
         
         mapView.addGestureRecognizer(tabGesture)
     }
@@ -53,7 +53,8 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
     }
     
     @objc private func searchPhotosByPin(tabGesture:UIGestureRecognizer) {
-        
+        if !editMode {
+        print("searchPhotosByPin")
        let touchPointAtMapView = tabGesture.location(in: mapView)
        let mapCoordinate = mapView.convert(touchPointAtMapView, toCoordinateFrom: mapView)
         
@@ -61,6 +62,16 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
         
         tabLocationLongtitude = location.longitude
         tabLocationLatitude = location.latitude
+        
+        // navigate to the PhotoAlbum page
+        performSegue(withIdentifier: "showPhotoAlbum", sender: self)
+        } else {
+            // TODO: remove the annotation from the mapView
+            let annotation = MKPointAnnotation()
+            annotation.coordinate = location
+            mapView.removeAnnotation(annotation)
+        }
+        
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -84,9 +95,6 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
     
         if deletePinButton.isHidden {
             mapView.addAnnotation(annotation)
-        } else {
-            // TODO: remove the annotation from the mapView
-            mapView.removeAnnotation(annotation)
         }
         
     }
@@ -120,10 +128,12 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
         if rightBarButton?.title == "Edit" {
             rightBarButton?.title = "Done"
             deletePinButton.isHidden = false
+            editMode = true
         }
         else {
             rightBarButton?.title = "Edit"
             deletePinButton.isHidden = true
+            editMode = false
         }
         
     }
