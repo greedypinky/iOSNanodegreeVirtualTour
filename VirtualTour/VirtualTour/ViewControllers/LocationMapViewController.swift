@@ -20,6 +20,7 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
     
     var tabLocationLongtitude:Double?
     var tabLocationLatitude:Double?
+    var selectedPinLocationCoordinate:CLLocationCoordinate2D?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -40,9 +41,9 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
         mapView.addGestureRecognizer(longPress)
         
         // When a pin is tapped, the app will navigate to the Photo Album view associated with the pin.
-        let tabGesture = UITapGestureRecognizer(target: self, action: #selector(searchPhotosByPin))
-        
-        mapView.addGestureRecognizer(tabGesture)
+//        let tabGesture = UITapGestureRecognizer(target: self, action: #selector(searchPhotosByPin))
+//
+//        mapView.addGestureRecognizer(tabGesture)
     }
     
     private func addNavigationButton(){
@@ -58,17 +59,17 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
        let touchPointAtMapView = tabGesture.location(in: mapView)
        let mapCoordinate = mapView.convert(touchPointAtMapView, toCoordinateFrom: mapView)
         
-       let location = CLLocationCoordinate2D(latitude: mapCoordinate.latitude, longitude: mapCoordinate.longitude)
+       let selectedPinLocationCoordinate = CLLocationCoordinate2D(latitude: mapCoordinate.latitude, longitude: mapCoordinate.longitude)
         
-        tabLocationLongtitude = location.longitude
-        tabLocationLatitude = location.latitude
+        tabLocationLongtitude = selectedPinLocationCoordinate.longitude
+        tabLocationLatitude = selectedPinLocationCoordinate.latitude
         
         // navigate to the PhotoAlbum page
         performSegue(withIdentifier: "showPhotoAlbum", sender: self)
         } else {
             // TODO: remove the annotation from the mapView
             let annotation = MKPointAnnotation()
-            annotation.coordinate = location
+            annotation.coordinate = selectedPinLocationCoordinate!
             mapView.removeAnnotation(annotation)
         }
         
@@ -92,6 +93,7 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
         print("add pin to map! how ??")
         let annotation = MKPointAnnotation()
         annotation.coordinate = location
+        // annotation.title = "place holder"
     
         if deletePinButton.isHidden {
             mapView.addAnnotation(annotation)
@@ -105,7 +107,7 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
         var pinView = mapView.dequeueReusableAnnotationView(withIdentifier: annotationID) as? MKPinAnnotationView
         if pinView == nil {
             pinView = MKPinAnnotationView()
-            pinView?.canShowCallout = true
+            pinView?.canShowCallout = false
             pinView?.pinTintColor = .red
             pinView?.rightCalloutAccessoryView = UIButton(type:.detailDisclosure)
             
@@ -118,11 +120,27 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
         // TODO: when in Edit mode and user select the pin
         // Remove it from the MapView!
-       
+        print("did select")
+        print("what is the edit mode? \(editMode)" )
+        let annotation = view.annotation
+        if !editMode {
+            print("will perform segue to collectionview")
+           
+            tabLocationLongtitude = annotation?.coordinate.longitude
+            tabLocationLatitude = annotation?.coordinate.latitude
+            
+            //  When a pin is tapped, the app will navigate to the Photo Album view associated with the pin.
+            performSegue(withIdentifier: "showPhotoAlbum", sender: self)
+        } else {
+            print("will remove annotation!")
+            // When a pin is tapped, remove the annotation from the mapView
+            let annotation = MKPointAnnotation()
+            annotation.coordinate = selectedPinLocationCoordinate!
+            mapView.removeAnnotation(annotation)
+        }
+    
     }
-    
-    
-    
+        
     @objc func tabEditToShowDeletePinButton() {
         print("tab edit!")
         if rightBarButton?.title == "Edit" {
