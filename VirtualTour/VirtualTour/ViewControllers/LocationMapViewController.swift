@@ -156,6 +156,14 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
         
     }
     
+    // MARK: save the zoom level when app is killed
+    /**
+ The center of the map and the zoom level should be persistent. If the app is turned off, the map should return to the same state when it is turned on again.
+ **/
+    private func saveZoomLevel() {
+        
+    }
+    
     /*
     Travel Locations Map
     When the app first starts it will open to the map view. Users will be able to zoom and scroll around the map using standard pinch and drag gestures.
@@ -170,14 +178,5 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
     When a pin is tapped, the app will navigate to the Photo Album view associated with the pin.
     */
 
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
 
 }
