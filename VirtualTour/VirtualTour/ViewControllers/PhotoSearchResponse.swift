@@ -14,8 +14,12 @@ import Foundation
  { "id": "40558174193", "owner": "144775006@N04", "secret": "74ba85193a", "server": "7913", "farm": 8, "title": "-APOLLO-", "ispublic": 1, "isfriend": 0, "isfamily": 0 },
  */
 
-
 struct PhotoSearchResponse:Decodable {
+    let photos:PhotoSearchResult
+    let stat:String
+}
+
+struct PhotoSearchResult:Decodable {
     let page:String
     let pages:String
     let perpage:String

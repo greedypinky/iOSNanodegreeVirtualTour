@@ -8,11 +8,22 @@ class VirtualTourClient {
         case getSearch()
 
         // computed string
+        // use URLComponents to compose the component
+        // method=flickr.photos.search
+        // api_key=2c07d995ce5f68270fb0a9fcc3dfcfcb
+        // lat=38.905351009168896
+        // lon=-77.129282981547973
+        // format=json
+        // nojsoncallback=1
+        // auth_token=72157677839136247-86cb0c61ef9355cd
+        // api_sig=c37af41a57a1ce1d71c5cf1335b1ed5a
         var stringValue:String {
             
             switch self {
             case .getSearch:
-                    return "https://api.flickr.com/services/rest"
+                // Hardcode the lat and lon for now
+                return "https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=2c07d995ce5f68270fb0a9fcc3dfcfcb&lat=38.905351009168896&lon=-77.129282981547973&format=json&nojsoncallback=1&auth_token=72157677839136247-86cb0c61ef9355cd&api_sig=c37af41a57a1ce1d71c5cf1335b1ed5a"
+                    // return "https://api.flickr.com/services/rest"
             }
         }
         
@@ -21,6 +32,13 @@ class VirtualTourClient {
         }
         
     }
+    
+    /*
+     // the API KEY not working
+  https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=b6717100c12e0bec49e0b9dcbec347fb&lat=38.905351009168896&lon=-77.129282981547973&format=json&nojsoncallback=1&auth_token=72157677823070977-abe0198bf0dbe663&api_sig=23177536977d8dddd3554bc446f1572a
+     // This one is working
+    https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=2c07d995ce5f68270fb0a9fcc3dfcfcb&lat=38.905351009168896&lon=-77.129282981547973&format=json&nojsoncallback=1&auth_token=72157677839136247-86cb0c61ef9355cd&api_sig=c37af41a57a1ce1d71c5cf1335b1ed5a
+ */
     /**
      You must use the service "flickr.photos.search".
      https://www.flickr.com/services/api/flickr.photos.search.html
@@ -33,7 +51,8 @@ class VirtualTourClient {
             // add
         
         let endpoint:URL = FlickrEndpoint.getSearch().url
-        var request = URLRequest(url: endpoint)
+        print("Endpoint URL is \(endpoint)")
+        let request = URLRequest(url: endpoint)
         
 //        request.addValue(APIRequestKey.applicationID, forHTTPHeaderField: "X-Parse-Application-Id")
 //        request.addValue(APIRequestKey.restapikey, forHTTPHeaderField: "X-Parse-REST-API-Key")
@@ -53,6 +72,22 @@ class VirtualTourClient {
                 return
             }
             
+            // MARK: DEBUG ==============================
+
+            do {
+                    let jsonSerial =  try JSONSerialization.jsonObject(with: data, options: .allowFragments) as! [String:Any]
+    
+//                   let createdAt = jsonSerial["createdAt"] as! String
+//
+//                   let objectId = jsonSerial["objectId"] as! String
+//
+//                    print("created at \(createdAt) objectId: \(objectId)" )
+    
+                } catch {
+                    print(error)
+                }
+           
+            
             // we have to decode the data
             let jsonDecoder = JSONDecoder()
             do {
@@ -68,7 +103,15 @@ class VirtualTourClient {
                 }
             }
         }
+        
+         // task from suspended state to start the task
+         downloadTask.resume()
     }
 
+    // can use this function for debug if Decode fails
+    func parseJsonData(data: Data) throws -> [String: Any]? {
+        let result = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String: Any]
+        return result
+    }
     
 }

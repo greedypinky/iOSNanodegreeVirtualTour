@@ -9,16 +9,16 @@
 import Foundation
 
 struct FlickrAPIKey {
-    
-    static let key = "Key: b6717100c12e0bec49e0b9dcbec347fb"
+    // 1402721aeb46be30c78a3ff304d83b1b
+    static let key = "b6717100c12e0bec49e0b9dcbec347fb"
     
     static let secret = "dca01acfc8e0a8ab"
     static let methodName = "flickr.photos.search"
 }
 
 struct PhotoSearch:Codable {
-    var lat:String
-    var lon:String
+    var lat:Double
+    var lon:Double
     var api_key:String
     var in_gallery:Bool?=false
     var per_page:Int?=100
