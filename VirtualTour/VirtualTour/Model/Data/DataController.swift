@@ -14,7 +14,7 @@ class DataController {
     let persistenceContainer:NSPersistentContainer
 
     // calculated variable
-    var ViewContext:NSManagedObjectContext {
+    var viewContext:NSManagedObjectContext {
         return persistenceContainer.viewContext
     }
 

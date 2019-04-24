@@ -8,9 +8,11 @@
 
 import UIKit
 import MapKit
+import CoreData
 
 class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource {
     
+    var dataController:DataController!
     @IBOutlet weak var photoCollectionView: UICollectionView!
     
     @IBOutlet weak var mapView: MKMapView!
@@ -28,10 +30,16 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     var per_page:Int?=100
     var removePhotos:[IndexPath]?
     
+    // implicit unwrap
+    // If the user selects a pin that already has a photo album then the Photo Album view should display the album and the New Collection button should be enabled.
+    
+    var fetchResultController:NSFetchedResultsController<Album>!
+    
     /**
      If no images are found a “No Images” label will be displayed.
      If there are images, then they will be displayed in a collection view.
     */
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -45,6 +53,12 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         } else {
             showNoDataLabel()
         }
+        
+        // TODO: If Album for the place exists, we do not need to fetch data from the web but load the persisted album data
+        if let count = fetchResultController.sections?.count, count > 0  {
+            // Need to fetch the Photos as well
+        }
+        
 //
        let photoSearch = PhotoSearch(lat: lat!, lon: lon!, api_key: FlickrAPIKey.key, in_gallery: true, per_page: per_page)
 //        // TODO: Request Flickr Photos from the info we get from the PIN
@@ -63,32 +77,40 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     }
     
     override func viewWillAppear(_ animated: Bool) {
+        
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        dataController = appDelegate.dataController
+        
         newCollectionButton.isHidden = true
         newCollectionButton.isEnabled = false
         // Add the location pin for the MapView
         addPin()
         
+        // setupFetchedResultsController()
+        
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        fetchResultController = nil
     }
 
     // MARK: UICollectionViewDataSource
-
-    
     func numberOfSections(in collectionView: UICollectionView) -> Int {
         // #warning Incomplete implementation, return the number of sections
-        return 1
+         return fetchResultController.sections?.count ?? 1
     }
     
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         // #warning Incomplete implementation, return the number of items
         // @NSManaged public var photos: NSSet?
-        guard let count = album?.photos?.count else {
-            return 0
-        }
-        return count
+        let sectionInfo = fetchResultController.sections?[section]
+        return sectionInfo?.numberOfObjects ?? 0
+        
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as? PhotoCollectionViewCell
         
         // Configure set the cell with photo
@@ -187,6 +209,30 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         // we need to show 'New Collection' button
         newCollectionButton.isHidden = false
         newCollectionButton.isEnabled = true
+        
+        // TODO : we need to persist the Data into Core Data
+        // First check if the Album for this place is exist, If not we need to create a new Album to persist
+        // How can we add the Photos to Album ??
+        /*
+            struct PhotoSearchResponse:Decodable {
+                let photos:PhotoSearchResult
+                let stat:String
+            }
+            struct PhotoSearchResult:Decodable {
+                let page:String
+                let pages:String
+                let perpage:String
+                let total:String
+                let photos:[FlickrPhoto]
+            }
+         */
+        
+        let searchResults = response.photos
+        if searchResults.photos.count > 0  {
+            // TODO: update Core Data
+        } else {
+            // do not need to update Core Data
+        }
     }
     
     // When tab on New Collection or
@@ -235,9 +281,61 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         var noDataLabel:UILabel = UILabel(frame: frame)
         view.addSubview(noDataLabel)
         noDataLabel.isHidden = false
-        noDataLabel.text = "No Data lalalalalalalalallalaw where is the label!"
+        noDataLabel.text = "This pin has no images"
         noDataLabel.textAlignment = NSTextAlignment.center
         photoCollectionView.backgroundView = noDataLabel
         // photoCollectionView.isHidden = true
     }
+    
+    /**
+     let predicateIsNumber = NSPredicate(format: "isStringOrNumber == %@", NSNumber(value: false))
+     let predicateIsEnabled = NSPredicate(format: "isEnabled == %@", NSNumber(value: true))
+     let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [predicateIsNumber, predicateIsEnabled])
+     
+     //check here for the sender of the message
+     let fetchRequestSender = NSFetchRequest<NSFetchRequestResult>(entityName: "Keyword")
+     fetchRequestSender.predicate = andPredicate
+     **/
+    
+    fileprivate func setupFetchedResultsController() {
+        let fetchRequest:NSFetchRequest<Album> = Album.fetchRequest()
+        // TODO: Need to  update the predicate
+        let predicateLatitude = NSPredicate(format: "lat == %@", lat!)
+        let predicateLongtitude = NSPredicate(format: "long == %@", lon!)
+        let andPredicate = NSCompoundPredicate(type: NSCompoundPredicate.LogicalType.and, subpredicates: [predicateLatitude, predicateLongtitude])
+        fetchRequest.predicate = andPredicate
+        let sortDescriptor = NSSortDescriptor(key: "createDate", ascending: true)
+        fetchRequest.sortDescriptors = [sortDescriptor]
+        fetchResultController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
+    }
+
 }
+
+// MARK: extension with NSFetchedResultsControllerDelegate
+extension PhotoAlbumViewController:NSFetchedResultsControllerDelegate {
+    
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
+        
+        //
+        
+    }
+    
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange sectionInfo: NSFetchedResultsSectionInfo, atSectionIndex sectionIndex: Int, for type: NSFetchedResultsChangeType) {
+        
+        //
+        
+    }
+    
+    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        
+        //
+        
+    }
+    
+    func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        
+        //
+        
+    }
+}
+
