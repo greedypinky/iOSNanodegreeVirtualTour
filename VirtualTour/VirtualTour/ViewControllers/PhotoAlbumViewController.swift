@@ -172,68 +172,6 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
      }
      */
     
-    // Album operations on Photos
-    /*
-        @objc(addPhotosObject:)
-        @NSManaged public func addToPhotos(_ value: Photo)
-     
-        @objc(removePhotosObject:)
-        @NSManaged public func removeFromPhotos(_ value: Photo)
-     
-        @objc(addPhotos:)
-        @NSManaged public func addToPhotos(_ values: NSSet)
-     
-        @objc(removePhotos:)
-        @NSManaged public func removeFromPhotos(_ values: NSSet)
-     */
-
-    func handleGetResponse(res:PhotoSearchResponse?, error:Error?) {
-        // PhotoSearchResponse
-        // TODO: Set the PhotoSearchResponse data into the Core Data ?
-        //  PhotoSearchResponse's photos:[FlickrPhoto]
-        
-        guard let response = res else {
-            let ac = UIAlertController(title: "Search Flickr photos", message: error?.localizedDescription, preferredStyle: UIAlertController.Style.alert)
-            let action = UIAlertAction(title: "OK", style: UIAlertAction.Style.default) { (action) in
-                // tab OK to dismiss Alert Controller
-                self.dismiss(animated: true, completion: nil)
-            }
-            ac.addAction(action)
-            self.present(ac, animated: true, completion: nil)
-         return
-        }
-        
-        
-        // reload the Collection View
-        photoCollectionView.reloadData()
-        // we need to show 'New Collection' button
-        newCollectionButton.isHidden = false
-        newCollectionButton.isEnabled = true
-        
-        // TODO : we need to persist the Data into Core Data
-        // First check if the Album for this place is exist, If not we need to create a new Album to persist
-        // How can we add the Photos to Album ??
-        /*
-            struct PhotoSearchResponse:Decodable {
-                let photos:PhotoSearchResult
-                let stat:String
-            }
-            struct PhotoSearchResult:Decodable {
-                let page:String
-                let pages:String
-                let perpage:String
-                let total:String
-                let photos:[FlickrPhoto]
-            }
-         */
-        
-        let searchResults = response.photos
-        if searchResults.photos.count > 0  {
-            // TODO: update Core Data
-        } else {
-            // do not need to update Core Data
-        }
-    }
     
     // When tab on New Collection or
     @IBAction func getNewCollection(_ sender: Any) {
@@ -271,12 +209,6 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     
     private func showNoDataLabel() {
         
-//        UILabel *noDataLabel         = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, collectionView.bounds.size.width, collectionView.bounds.size.height)];
-//        noDataLabel.text             = @"No data found :(";
-//        noDataLabel.textColor        = [UIColor blackColor];
-//        noDataLabel.textAlignment    = NSTextAlignmentCenter;
-//        collectionView.backgroundView = noDataLabel;
-//        collectionView.separatorStyle = UITableViewCellSeparatorStyleNone;
         let frame = CGRect(x: 0, y: 0, width: photoCollectionView.bounds.width, height: photoCollectionView.bounds.height)
         var noDataLabel:UILabel = UILabel(frame: frame)
         view.addSubview(noDataLabel)
@@ -286,6 +218,101 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         photoCollectionView.backgroundView = noDataLabel
         // photoCollectionView.isHidden = true
     }
+    
+    
+  
+    // MARK: Network request handler
+    func handleGetResponse(res:PhotoSearchResponse?, error:Error?) {
+        // PhotoSearchResponse
+        // TODO: Set the PhotoSearchResponse data into the Core Data ?
+        //  PhotoSearchResponse's photos:[FlickrPhoto]
+        
+        guard let response = res else {
+            let ac = UIAlertController(title: "Search Flickr photos", message: error?.localizedDescription, preferredStyle: UIAlertController.Style.alert)
+            let action = UIAlertAction(title: "OK", style: UIAlertAction.Style.default) { (action) in
+                // tab OK to dismiss Alert Controller
+                self.dismiss(animated: true, completion: nil)
+            }
+            ac.addAction(action)
+            self.present(ac, animated: true, completion: nil)
+            return
+        }
+        
+        // TODO : we need to persist the Data into Core Data
+        // First check if the Album for this place is exist, If not we need to create a new Album to persist
+        // How can we add the Photos to Album ??
+        /*
+         struct PhotoSearchResponse:Decodable {
+         let photos:PhotoSearchResult
+         let stat:String
+         }
+         struct PhotoSearchResult:Decodable {
+         let page:String
+         let pages:String
+         let perpage:String
+         let total:String
+         let photos:[FlickrPhoto]
+         }
+         */
+        
+        guard let flickrPhotos = response.photos.photos else {
+            print("Error! no flickr photos")
+            return
+        }
+        
+        if flickrPhotos.count > 0 {
+            // TODO: 1. Map the data to URL 2. create an Album and add core data
+            // TODO: Traverse through the loop and map the URL
+            // Add the URL to the Album
+            // 1. NEED TO CREATE ALBUM HERE
+            for photoInfo in flickrPhotos {
+                let photoURL:URL = VirtualTourClient.mapPhotoToURL(id: photoInfo.id, secret: photoInfo.secret, farmid: photoInfo.farm, serverid: photoInfo.server)
+                
+                // TODO: need to add one by one into the Album
+                
+                // 2. ADD PHOTOS so that the Collection View can pick up the data from fetchResultController
+            }
+            
+        }
+        
+        
+        
+        // reload the Collection View
+        photoCollectionView.reloadData()
+        // we need to show 'New Collection' button
+        newCollectionButton.isHidden = false
+        newCollectionButton.isEnabled = true
+    }
+    
+    
+    // MARK: Core Data functions
+    
+    func addAlbum(){
+        let album = Album(context: dataController.viewContext)
+        // HOW To ADD the photo ?
+        try? dataController.viewContext.save()
+        
+    }
+    
+    func deleteAlbum() {
+    
+    }
+    
+    
+    // Album operations on Photos
+    /*
+     @objc(addPhotosObject:)
+     @NSManaged public func addToPhotos(_ value: Photo)
+     
+     @objc(removePhotosObject:)
+     @NSManaged public func removeFromPhotos(_ value: Photo)
+     
+     @objc(addPhotos:)
+     @NSManaged public func addToPhotos(_ values: NSSet)
+     
+     @objc(removePhotos:)
+     @NSManaged public func removeFromPhotos(_ values: NSSet)
+     */
     
     /**
      let predicateIsNumber = NSPredicate(format: "isStringOrNumber == %@", NSNumber(value: false))
@@ -297,6 +324,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
      fetchRequestSender.predicate = andPredicate
      **/
     
+    // try to fetch the Album
     fileprivate func setupFetchedResultsController() {
         let fetchRequest:NSFetchRequest<Album> = Album.fetchRequest()
         // TODO: Need to  update the predicate
@@ -307,8 +335,33 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         let sortDescriptor = NSSortDescriptor(key: "createDate", ascending: true)
         fetchRequest.sortDescriptors = [sortDescriptor]
         fetchResultController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
+        
+        fetchResultController.delegate = self
+        do {
+            try fetchResultController.performFetch()
+        } catch {
+            fatalError("Error when try to fetch the album \(error.localizedDescription)")
+        }
     }
-
+    
+    
+    fileprivate func setupPhotosFetchedResultsController() {
+//        let fetchRequest:NSFetchRequest<Note> = Note.fetchRequest()
+       let predicate = NSPredicate(format: "album == %@", album)
+//        fetchRequest.predicate = predicate
+//        let sortDescriptor = NSSortDescriptor(key: "creationDate", ascending: true)
+//        fetchRequest.sortDescriptors = [sortDescriptor]
+//
+//        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: "\(notebook)-notes")
+//        fetchedResultsController.delegate = self
+//
+//        do {
+//            try fetchedResultsController.performFetch()
+//        } catch {
+//            fatalError("The fetch could not be performed: \(error.localizedDescription)")
+//        }
+    }
+    
 }
 
 // MARK: extension with NSFetchedResultsControllerDelegate

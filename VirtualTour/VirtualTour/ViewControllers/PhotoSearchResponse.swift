@@ -24,7 +24,7 @@ struct PhotoSearchResult:Decodable {
     let pages:String
     let perpage:String
     let total:String
-    let photos:[FlickrPhoto]
+    let photos:[FlickrPhoto]?
 }
 
 struct FlickrPhoto:Decodable {

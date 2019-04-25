@@ -3,9 +3,11 @@ import Foundation
 
 class VirtualTourClient {
     
-    enum FlickrEndpoint{
+    enum FlickrEndpoint {
         
         case getSearch()
+        
+        case getPhoto(id:String, secret:String, farmid:String, serverid:String)
 
         // computed string
         // use URLComponents to compose the component
@@ -20,17 +22,20 @@ class VirtualTourClient {
         var stringValue:String {
             
             switch self {
-            case .getSearch:
-                // Hardcode the lat and lon for now
-                return "https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=2c07d995ce5f68270fb0a9fcc3dfcfcb&lat=38.905351009168896&lon=-77.129282981547973&format=json&nojsoncallback=1&auth_token=72157677839136247-86cb0c61ef9355cd&api_sig=c37af41a57a1ce1d71c5cf1335b1ed5a"
-                    // return "https://api.flickr.com/services/rest"
+                case .getSearch:
+                    // Hardcode the lat and lon for now
+                    return "https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=2c07d995ce5f68270fb0a9fcc3dfcfcb&lat=38.905351009168896&lon=-77.129282981547973&format=json&nojsoncallback=1&auth_token=72157677839136247-86cb0c61ef9355cd&api_sig=c37af41a57a1ce1d71c5cf1335b1ed5a"
+                        // return "https://api.flickr.com/services/rest"
+                case let .getPhoto(id, secret, farmid, serverid):
+                    // URL mapping https://www.flickr.com/services/api/misc.urls.html
+                    // TODO: construct the source URL to a photo once you know its ID, server ID, farm ID and secret, as returned by many API methods.
+                    return "https://farm\(farmid).staticflickr.com/\(serverid)/\(id)_\(secret).jpg"
             }
         }
         
         var url:URL {
             return URL(string:self.stringValue)!
         }
-        
     }
     
     /*
@@ -112,6 +117,15 @@ class VirtualTourClient {
     func parseJsonData(data: Data) throws -> [String: Any]? {
         let result = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String: Any]
         return result
+    }
+    
+    
+    // TODO : we get the photo ID only
+    // We still need to map the photo id to URL
+    // Question so we should store the photo URL as string
+    // NOT the actual image, we load the image when we load the collection.
+    class func mapPhotoToURL(id:String, secret:String, farmid:String, serverid:String) -> URL {
+        return FlickrEndpoint.getPhoto(id: id, secret: secret, farmid: farmid, serverid: serverid).url
     }
     
 }
