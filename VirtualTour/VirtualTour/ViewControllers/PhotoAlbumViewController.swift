@@ -30,16 +30,15 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     var per_page:Int?=100
     var removePhotos:[IndexPath]?
     
+    
     // implicit unwrap
     // If the user selects a pin that already has a photo album then the Photo Album view should display the album and the New Collection button should be enabled.
-    
-    var fetchResultController:NSFetchedResultsController<Album>!
+    var fetchResultController:NSFetchedResultsController<Photo>!
     
     /**
      If no images are found a “No Images” label will be displayed.
      If there are images, then they will be displayed in a collection view.
     */
-    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -54,16 +53,14 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             showNoDataLabel()
         }
         
-        // TODO: If Album for the place exists, we do not need to fetch data from the web but load the persisted album data
-        if let count = fetchResultController.sections?.count, count > 0  {
-            // Need to fetch the Photos as well
+        // fetch photos from Flickr if there is no data for the Album
+        if album.photos?.count == 0 {
+            let photoSearch = PhotoSearch(lat: lat!, lon: lon!, api_key: FlickrAPIKey.key, in_gallery: true, per_page: per_page)
+            VirtualTourClient.photoGetRequest(photoSearch: photoSearch, responseType: PhotoSearchResponse.self, completionHandler: handleGetResponse(res:error:))
+        } else {
+            // fetch data from the modal
+            setupPhotosFetchedResultsController()
         }
-        
-//
-       let photoSearch = PhotoSearch(lat: lat!, lon: lon!, api_key: FlickrAPIKey.key, in_gallery: true, per_page: per_page)
-//        // TODO: Request Flickr Photos from the info we get from the PIN
-//
-        VirtualTourClient.photoGetRequest(photoSearch: photoSearch, responseType: PhotoSearchResponse.self, completionHandler: handleGetResponse(res:error:))
     }
     
     /**
@@ -157,20 +154,20 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
      } */
     
     
-    /*
+    
      // Uncomment these methods to specify if an action menu should be displayed for the specified item, and react to actions performed on the item
-     override func collectionView(_ collectionView: UICollectionView, shouldShowMenuForItemAt indexPath: IndexPath) -> Bool {
-     return false
-     }
-     
-     override func collectionView(_ collectionView: UICollectionView, canPerformAction action: Selector, forItemAt indexPath: IndexPath, withSender sender: Any?) -> Bool {
-     return false
-     }
-     
-     override func collectionView(_ collectionView: UICollectionView, performAction action: Selector, forItemAt indexPath: IndexPath, withSender sender: Any?) {
-     
-     }
-     */
+//     func collectionView(_ collectionView: UICollectionView, shouldShowMenuForItemAt indexPath: IndexPath) -> Bool {
+//     return false
+//     }
+//
+//     func collectionView(_ collectionView: UICollectionView, canPerformAction action: Selector, forItemAt indexPath: IndexPath, withSender sender: Any?) -> Bool {
+//     return false
+//     }
+    
+//     func collectionView(_ collectionView: UICollectionView, performAction action: Selector, forItemAt indexPath: IndexPath, withSender sender: Any?) {
+//
+//     }
+    
     
     
     // When tab on New Collection or
@@ -274,8 +271,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             }
             
         }
-        
-        
+
         
         // reload the Collection View
         photoCollectionView.reloadData()
@@ -287,9 +283,10 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     
     // MARK: Core Data functions
     
-    func addAlbum(){
-        let album = Album(context: dataController.viewContext)
+    func addPhoto(url:URL){
+        let photo = Photo(context: dataController.viewContext)
         // HOW To ADD the photo ?
+        
         try? dataController.viewContext.save()
         
     }
@@ -325,6 +322,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
      **/
     
     // try to fetch the Album
+    /*
     fileprivate func setupFetchedResultsController() {
         let fetchRequest:NSFetchRequest<Album> = Album.fetchRequest()
         // TODO: Need to  update the predicate
@@ -342,24 +340,24 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         } catch {
             fatalError("Error when try to fetch the album \(error.localizedDescription)")
         }
-    }
+    } */
     
     
     fileprivate func setupPhotosFetchedResultsController() {
-//        let fetchRequest:NSFetchRequest<Note> = Note.fetchRequest()
+       let fetchRequestPhoto:NSFetchRequest<Photo> = Photo.fetchRequest()
        let predicate = NSPredicate(format: "album == %@", album)
-//        fetchRequest.predicate = predicate
-//        let sortDescriptor = NSSortDescriptor(key: "creationDate", ascending: true)
-//        fetchRequest.sortDescriptors = [sortDescriptor]
-//
-//        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: "\(notebook)-notes")
-//        fetchedResultsController.delegate = self
-//
-//        do {
-//            try fetchedResultsController.performFetch()
-//        } catch {
-//            fatalError("The fetch could not be performed: \(error.localizedDescription)")
-//        }
+       fetchRequestPhoto.predicate = predicate
+        let sortDescriptor = NSSortDescriptor(key: "creationDate", ascending: true)
+        fetchRequestPhoto.sortDescriptors = [sortDescriptor]
+
+        fetchResultController = NSFetchedResultsController(fetchRequest: fetchRequestPhoto, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: "\(album)-photos")
+        fetchResultController.delegate = self
+
+        do {
+            try fetchResultController.performFetch()
+        } catch {
+            fatalError("The fetch could not be performed: \(error.localizedDescription)")
+        }
     }
     
 }

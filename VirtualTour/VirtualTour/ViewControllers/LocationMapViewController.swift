@@ -8,8 +8,12 @@
 
 import UIKit
 import MapKit
+import CoreData
 
 class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocationManagerDelegate{
+    
+    
+    var dataController:DataController!
     
     @IBOutlet weak var mapView: MKMapView!
     
@@ -21,6 +25,8 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
     var tabLocationLongtitude:Double?
     var tabLocationLatitude:Double?
     var selectedPinLocationCoordinate:CLLocationCoordinate2D?
+    var album:Album!
+    var fetchResultController:NSFetchedResultsController<Album>!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -28,6 +34,9 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
     }
     
     override func viewWillAppear(_ animated: Bool) {
+        
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        dataController = appDelegate.dataController
         
         navigationItem.title = "Virtual Tourist"
         addNavigationButton()
@@ -40,7 +49,6 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
         longPress.minimumPressDuration = 0.5
         mapView.addGestureRecognizer(longPress)
         mapView.delegate = self
-        
     }
     
     private func addNavigationButton(){
@@ -61,6 +69,8 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
         tabLocationLongtitude = selectedPinLocationCoordinate.longitude
         tabLocationLatitude = selectedPinLocationCoordinate.latitude
         
+        setupFetchedResultsController()
+            
         // navigate to the PhotoAlbum page
         performSegue(withIdentifier: "showPhotoAlbum", sender: self)
         } else {
@@ -78,6 +88,7 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
             let photoAlbumVC  = segue.destination as! PhotoAlbumViewController
             photoAlbumVC.lat = tabLocationLatitude!
             photoAlbumVC.lon = tabLocationLongtitude!
+            photoAlbumVC.album = album
         }
     }
     
@@ -182,5 +193,73 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
     When a pin is tapped, the app will navigate to the Photo Album view associated with the pin.
     */
 
+    
+    // MARK: Core Data functions
+    func addAlbum(lat:Double, lon:Double){
+        album = Album(context: dataController.viewContext)
+        // HOW To ADD the photo ?
+        album.createDate = Date()
+        album.lat = lat
+        album.long = lon
+        try? dataController.viewContext.save()
+        
+        
+    }
+    
+    // try to fetch the Album
+    fileprivate func setupFetchedResultsController() {
+        let fetchRequest:NSFetchRequest<Album> = Album.fetchRequest()
+        // TODO: Need to  update the predicate
+        let predicateLatitude = NSPredicate(format: "lat == %@", tabLocationLatitude!)
+        let predicateLongtitude = NSPredicate(format: "long == %@", tabLocationLongtitude!)
+        let andPredicate = NSCompoundPredicate(type: NSCompoundPredicate.LogicalType.and, subpredicates: [predicateLatitude, predicateLongtitude])
+        fetchRequest.predicate = andPredicate
+        let sortDescriptor = NSSortDescriptor(key: "createDate", ascending: true)
+        fetchRequest.sortDescriptors = [sortDescriptor]
+        fetchResultController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
+        
+        fetchResultController.delegate = self
+        do {
+            try fetchResultController.performFetch()
+            
+            // if nothing we add the album
+            if fetchResultController.fetchedObjects?.count == 0 {
+                // let's create an new album
+                addAlbum(lat: tabLocationLatitude!, lon: tabLocationLongtitude!)
+            }
+            
+        } catch {
+            fatalError("Error when try to fetch the album \(error.localizedDescription)")
+        }
+    }
 
+}
+
+
+// MARK: extension with NSFetchedResultsControllerDelegate
+extension LocationMapViewController:NSFetchedResultsControllerDelegate {
+    
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
+        
+        //
+        
+    }
+    
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange sectionInfo: NSFetchedResultsSectionInfo, atSectionIndex sectionIndex: Int, for type: NSFetchedResultsChangeType) {
+        
+        //
+        
+    }
+    
+    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        
+        //
+        
+    }
+    
+    func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        
+        //
+        
+    }
 }
