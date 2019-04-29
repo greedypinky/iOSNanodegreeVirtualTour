@@ -8,12 +8,21 @@
 
 import Foundation
 
-struct FlickrAPIKey {
-    // 1402721aeb46be30c78a3ff304d83b1b
+// https://grokswift.com/building-urls/
+struct FlickrAPI {
     static let key = "b6717100c12e0bec49e0b9dcbec347fb"
+    let secret = "dca01acfc8e0a8ab"
+    let methodName = "flickr.photos.search"
+    let baseURL = "api.flickr.com"
+    let path = "/services/rest/"
     
-    static let secret = "dca01acfc8e0a8ab"
-    static let methodName = "flickr.photos.search"
+    func getURLComponents() -> URLComponents {
+        var urlComponents = URLComponents()
+        urlComponents.scheme = "https"
+        urlComponents.host = baseURL
+        urlComponents.path = path
+        return urlComponents
+    }
 }
 
 struct PhotoSearch:Codable {
@@ -22,6 +31,7 @@ struct PhotoSearch:Codable {
     var api_key:String
     var in_gallery:Bool?=false
     var per_page:Int?=100
+    var page:Int=1
     
 //    lat (Optional)
 //    A valid latitude, in decimal format, for doing radial geo queries.

@@ -25,8 +25,8 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
     var tabLocationLongtitude:Double?
     var tabLocationLatitude:Double?
     var selectedPinLocationCoordinate:CLLocationCoordinate2D?
-    var album:Album!
-    var fetchResultController:NSFetchedResultsController<Album>!
+    var pin:Pin!
+    var fetchResultController:NSFetchedResultsController<Pin>!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -51,6 +51,11 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
         mapView.delegate = self
     }
     
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        fetchResultController = nil
+    }
+    
     private func addNavigationButton(){
         rightBarButton = UIBarButtonItem(image: nil, style: UIBarButtonItem.Style.plain, target:self, action: #selector(tabEditToShowDeletePinButton))
         rightBarButton?.title = "Edit"
@@ -58,55 +63,32 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
         
     }
     
-    @objc private func searchPhotosByPin(tabGesture:UIGestureRecognizer) {
-        if !editMode {
-        print("searchPhotosByPin")
-       let touchPointAtMapView = tabGesture.location(in: mapView)
-       let mapCoordinate = mapView.convert(touchPointAtMapView, toCoordinateFrom: mapView)
-        
-       let selectedPinLocationCoordinate = CLLocationCoordinate2D(latitude: mapCoordinate.latitude, longitude: mapCoordinate.longitude)
-        
-        tabLocationLongtitude = selectedPinLocationCoordinate.longitude
-        tabLocationLatitude = selectedPinLocationCoordinate.latitude
-        
-        setupFetchedResultsController()
-            
-        // navigate to the PhotoAlbum page
-        performSegue(withIdentifier: "showPhotoAlbum", sender: self)
-        } else {
-            // TODO: remove the annotation from the mapView
-            let annotation = MKPointAnnotation()
-            annotation.coordinate = selectedPinLocationCoordinate!
-            mapView.removeAnnotation(annotation)
-        }
-        
-    }
-    
+
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         // prepare data for navigate
         if segue.identifier == "showPhotoAlbum" {
             let photoAlbumVC  = segue.destination as! PhotoAlbumViewController
             photoAlbumVC.lat = tabLocationLatitude!
             photoAlbumVC.lon = tabLocationLongtitude!
-            photoAlbumVC.album = album
+            photoAlbumVC.pin = pin
         }
     }
     
     @objc private func addPinToTheMap(longPressGesture:UIGestureRecognizer) {
-       
+       print("add pin to map is called!")
         let touchPointAtMapView = longPressGesture.location(in: mapView)
         // transfer the touchpoint to map coordinate
         let mapCoordinate = mapView.convert(touchPointAtMapView, toCoordinateFrom: mapView)
         let location = CLLocationCoordinate2D(latitude: mapCoordinate.latitude, longitude: mapCoordinate.longitude)
-        print("add pin to map! how ??")
         let annotation = MKPointAnnotation()
         annotation.coordinate = location
-        // annotation.title = "place holder"
-    
         if deletePinButton.isHidden {
             mapView.addAnnotation(annotation)
         }
         
+        // TODO: When pins are dropped on the map, the pins are persisted as Pin instances in Core Data and the context is saved.
+        print("Save pin to core data!")
+        setupFetchedResultsController(lat: mapCoordinate.latitude, lon: mapCoordinate.longitude)
     }
     
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
@@ -134,9 +116,6 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
         print("did select")
         print("what is the edit mode? \(editMode)" )
         let annotation = view.annotation
-        print("annotation 's lat \(annotation?.coordinate.latitude)")
-        print("annotation 's lon \(annotation?.coordinate.longitude)")
-        
         if !editMode {
             print("will perform segue to collectionview")
            
@@ -149,7 +128,6 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
             print("will remove annotation!")
             // When a pin is tapped, remove the annotation from the mapView
             mapView.removeAnnotation(annotation!)
-            
         }
     
     }
@@ -195,23 +173,24 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
 
     
     // MARK: Core Data functions
-    func addAlbum(lat:Double, lon:Double){
-        album = Album(context: dataController.viewContext)
+    func addPinToCoreData(lat:Double, lon:Double){
+        
+        pin = Pin(context: dataController.viewContext)
         // HOW To ADD the photo ?
-        album.createDate = Date()
-        album.lat = lat
-        album.long = lon
+        pin.createDate = Date()
+        pin.lat = lat
+        pin.long = lon
         try? dataController.viewContext.save()
-        
-        
+        print("Saved pin to core data")
     }
     
     // try to fetch the Album
-    fileprivate func setupFetchedResultsController() {
-        let fetchRequest:NSFetchRequest<Album> = Album.fetchRequest()
+    fileprivate func setupFetchedResultsController(lat:Double,lon:Double) {
+        print("Pin: setup fetch result controller!")
+        let fetchRequest:NSFetchRequest<Pin> = Pin.fetchRequest()
         // TODO: Need to  update the predicate
-        let predicateLatitude = NSPredicate(format: "lat == %@", tabLocationLatitude!)
-        let predicateLongtitude = NSPredicate(format: "long == %@", tabLocationLongtitude!)
+        let predicateLatitude = NSPredicate(format: "lat == %@", lat)
+        let predicateLongtitude = NSPredicate(format: "long == %@", lon)
         let andPredicate = NSCompoundPredicate(type: NSCompoundPredicate.LogicalType.and, subpredicates: [predicateLatitude, predicateLongtitude])
         fetchRequest.predicate = andPredicate
         let sortDescriptor = NSSortDescriptor(key: "createDate", ascending: true)
@@ -222,12 +201,11 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
         do {
             try fetchResultController.performFetch()
             
-            // if nothing we add the album
+            // if no data object is fetched, then persists the Pin
             if fetchResultController.fetchedObjects?.count == 0 {
                 // let's create an new album
-                addAlbum(lat: tabLocationLatitude!, lon: tabLocationLongtitude!)
+                addPinToCoreData(lat: lat, lon: lon)
             }
-            
         } catch {
             fatalError("Error when try to fetch the album \(error.localizedDescription)")
         }

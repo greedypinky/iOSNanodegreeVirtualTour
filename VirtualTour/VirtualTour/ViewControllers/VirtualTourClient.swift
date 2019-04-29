@@ -5,7 +5,7 @@ class VirtualTourClient {
     
     enum FlickrEndpoint {
         
-        case getSearch()
+        case getSearch(lat:Double,lon:Double)
         
         case getPhoto(id:String, secret:String, farmid:String, serverid:String)
 
@@ -17,15 +17,28 @@ class VirtualTourClient {
         // lon=-77.129282981547973
         // format=json
         // nojsoncallback=1
-        // auth_token=72157677839136247-86cb0c61ef9355cd
-        // api_sig=c37af41a57a1ce1d71c5cf1335b1ed5a
+        // var in_gallery:Bool?=false
+        // var per_page:Int?=100
         var stringValue:String {
             
             switch self {
-                case .getSearch:
+                case let .getSearch(lat,lon):
                     // Hardcode the lat and lon for now
-                    return "https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=2c07d995ce5f68270fb0a9fcc3dfcfcb&lat=38.905351009168896&lon=-77.129282981547973&format=json&nojsoncallback=1&auth_token=72157677839136247-86cb0c61ef9355cd&api_sig=c37af41a57a1ce1d71c5cf1335b1ed5a"
-                        // return "https://api.flickr.com/services/rest"
+                    let api = FlickrAPI()
+                    var urlComponents = api.getURLComponents()
+                    // add params
+                    let method = URLQueryItem(name: "method", value:api.methodName)
+                    let apikey = URLQueryItem(name: "api_key", value: FlickrAPI.key) // let key = "b6717100c12e0bec49e0b9dcbec347fb"
+                    let latitude = URLQueryItem(name: "lat", value: "\(lat)")
+                    let longitude = URLQueryItem(name: "lon", value: "\(lon)")
+                    let format = URLQueryItem(name: "format", value: "json")
+                    let nojsoncallback = URLQueryItem(name: "nojsoncallback", value: "1")
+                    let per_page = URLQueryItem(name: "per_page", value: "100")
+                    urlComponents.queryItems = [method,apikey,latitude,longitude,format,nojsoncallback]
+                    return urlComponents.url!.absoluteString
+                    
+//                    return "https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=2c07d995ce5f68270fb0a9fcc3dfcfcb&lat=38.905351009168896&lon=-77.129282981547973&format=json&nojsoncallback=1&auth_token=72157677839136247-86cb0c61ef9355cd&api_sig=c37af41a57a1ce1d71c5cf1335b1ed5a"
+                
                 case let .getPhoto(id, secret, farmid, serverid):
                     // URL mapping https://www.flickr.com/services/api/misc.urls.html
                     // TODO: construct the source URL to a photo once you know its ID, server ID, farm ID and secret, as returned by many API methods.
@@ -38,12 +51,7 @@ class VirtualTourClient {
         }
     }
     
-    /*
-     // the API KEY not working
-  https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=b6717100c12e0bec49e0b9dcbec347fb&lat=38.905351009168896&lon=-77.129282981547973&format=json&nojsoncallback=1&auth_token=72157677823070977-abe0198bf0dbe663&api_sig=23177536977d8dddd3554bc446f1572a
-     // This one is working
-    https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=2c07d995ce5f68270fb0a9fcc3dfcfcb&lat=38.905351009168896&lon=-77.129282981547973&format=json&nojsoncallback=1&auth_token=72157677839136247-86cb0c61ef9355cd&api_sig=c37af41a57a1ce1d71c5cf1335b1ed5a
- */
+ 
     /**
      You must use the service "flickr.photos.search".
      https://www.flickr.com/services/api/flickr.photos.search.html
@@ -53,12 +61,12 @@ class VirtualTourClient {
      var per_page:Int?=100
     */
     class func photoGetRequest<RequestType:Encodable,ResponseType:Decodable>(photoSearch:RequestType, responseType: ResponseType.Type,completionHandler: @escaping (ResponseType?,Error?) -> Void) {
-            // add
-        
-        let endpoint:URL = FlickrEndpoint.getSearch().url
+    
+        let search = photoSearch as! PhotoSearch
+        let endpoint:URL = FlickrEndpoint.getSearch(lat: search.lat, lon: search.lon).url
         print("Endpoint URL is \(endpoint)")
-        let request = URLRequest(url: endpoint)
-        
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "GET"
 //        request.addValue(APIRequestKey.applicationID, forHTTPHeaderField: "X-Parse-Application-Id")
 //        request.addValue(APIRequestKey.restapikey, forHTTPHeaderField: "X-Parse-REST-API-Key")
         
@@ -77,22 +85,6 @@ class VirtualTourClient {
                 return
             }
             
-            // MARK: DEBUG ==============================
-
-            do {
-                    let jsonSerial =  try JSONSerialization.jsonObject(with: data, options: .allowFragments) as! [String:Any]
-    
-//                   let createdAt = jsonSerial["createdAt"] as! String
-//
-//                   let objectId = jsonSerial["objectId"] as! String
-//
-//                    print("created at \(createdAt) objectId: \(objectId)" )
-    
-                } catch {
-                    print(error)
-                }
-           
-            
             // we have to decode the data
             let jsonDecoder = JSONDecoder()
             do {
@@ -104,6 +96,7 @@ class VirtualTourClient {
             } catch let decodeErr{
                 DispatchQueue.main.async {
                     // handle the decoded data
+                    print("what is the error? \(decodeErr.localizedDescription)")
                     completionHandler(nil, decodeErr)
                 }
             }
@@ -113,6 +106,29 @@ class VirtualTourClient {
          downloadTask.resume()
     }
 
+    // Download the Image of the Photo
+    // https://farm1.staticflickr.com/2/1418878_1e92283336_m.jpg
+    class func photoImageDownload(url:URL,completionHandler: @escaping (Data?,Error?) -> Void) {
+        
+        let downloadTask = URLSession.shared.dataTask(with: url) { (data, response, error) in
+            // guard there is no error
+            guard error == nil else {
+                completionHandler(nil,error)
+                return
+            }
+            // guard we have image data
+            guard let data = data else {
+                completionHandler(nil,error)
+                return
+            }
+            print("Photo URL has data!")
+            completionHandler(data,nil)
+        }
+        
+        // start the download task
+        downloadTask.resume()
+    }
+    
     // can use this function for debug if Decode fails
     func parseJsonData(data: Data) throws -> [String: Any]? {
         let result = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String: Any]
@@ -127,5 +143,8 @@ class VirtualTourClient {
     class func mapPhotoToURL(id:String, secret:String, farmid:String, serverid:String) -> URL {
         return FlickrEndpoint.getPhoto(id: id, secret: secret, farmid: farmid, serverid: serverid).url
     }
+    
+    
+    
     
 }

@@ -20,11 +20,11 @@ struct PhotoSearchResponse:Decodable {
 }
 
 struct PhotoSearchResult:Decodable {
-    let page:String
-    let pages:String
-    let perpage:String
+    let page:Int
+    let pages:Int
+    let perpage:Int
     let total:String
-    let photos:[FlickrPhoto]?
+    let photo:[FlickrPhoto]?
 }
 
 struct FlickrPhoto:Decodable {
@@ -32,10 +32,10 @@ struct FlickrPhoto:Decodable {
     let owner:String
     let secret:String
     let server:String
-    let farm:String
+    let farm:Int
     let title:String
-    let ispublic:String
-    let isfriend:String
-    let isfamily:String
+    let ispublic:Int
+    let isfriend:Int
+    let isfamily:Int
 }
 

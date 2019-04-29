@@ -24,10 +24,10 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     let defaultButtonLabel = "New Collection"
     
     let placeholderPic = "https://picsum.photos/200"
-    var album:Album!
+    var pin:Pin!
     var lat:Double?=0.0
     var lon:Double?=0.0
-    var per_page:Int?=100
+    var per_page:Int?=10
     var removePhotos:[IndexPath]?
     
     
@@ -45,32 +45,48 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         photoCollectionView.allowsMultipleSelection = true
         photoCollectionView.dataSource = self
         photoCollectionView.delegate = self
-        if let count = album?.photos?.count {
-            if count == 0 {
-                showNoDataLabel()
-            }
-        } else {
+        
+        newCollectionButton.isHidden = true
+        newCollectionButton.isEnabled = false
+        
+        // Add the location pin for the MapView
+        addPin()
+        // Show photos if there is persisted data, otherwise fetch from flickr
+        showPhotos()
+        
+       
+    }
+    
+    private func showPhotos() {
+        
+        guard pin != nil else {
+            fatalError("Pin has no data!")
             showNoDataLabel()
+            return
         }
         
-        // fetch photos from Flickr if there is no data for the Album
-        if album.photos?.count == 0 {
-            let photoSearch = PhotoSearch(lat: lat!, lon: lon!, api_key: FlickrAPIKey.key, in_gallery: true, per_page: per_page)
+        // When a Photo Album View is opened for a pin that does not yet have any photos, it initiates a download from Flickr.
+        if pin.photos?.count == 0 {
+            let photoSearch = PhotoSearch(lat: lat!, lon: lon!, api_key: FlickrAPI.key, in_gallery: true, per_page: per_page, page:1)
             VirtualTourClient.photoGetRequest(photoSearch: photoSearch, responseType: PhotoSearchResponse.self, completionHandler: handleGetResponse(res:error:))
         } else {
-            // fetch data from the modal
+            // If the Photo Album view is opened for a pin that previously had photos assigned, they are immediately displayed. No new download is needed.
             setupPhotosFetchedResultsController()
         }
+        
+       
     }
     
     /**
-     The app should determine how many images are available for the pin location, and display a placeholder image for each.
+     The app should determine how many images are available for the pin location, and display a placeholder image for each
+     The Photo Album view has a button that initiates the download of a new album, replacing the images in the photo album with a new set from Flickr. The new set should contain different images (if available) from the ones previously displayed. One way this can be achieved is by specifying a random value for the page parameter when making the request..
      */
     private func sendGetRequest() {
-//        let photoSearch = PhotoSearch(lat: lat!, lon: lon!, api_key: FlickrAPIKey.key, in_gallery: true, per_page: per_page)
-//        // TODO: Request Flickr Photos from the info we get from the PIN
-//
-//        VirtualTourClient.photoGetRequest(photoSearch: photoSearch, responseType: PhotoSearchResponse.self, completionHandler: handleGetResponse(res:error:))
+        // fetch 50 different set of photos randomly
+        let page:Int = Int.random(in: 1...50)
+        let photoSearch = PhotoSearch(lat: lat!, lon: lon!, api_key: FlickrAPI.key, in_gallery: true, per_page: per_page, page:page)
+        // TODO: Request Flickr Photos from the info we get from the PIN
+        VirtualTourClient.photoGetRequest(photoSearch: photoSearch, responseType: PhotoSearchResponse.self, completionHandler: handleGetResponse(res:error:))
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -78,42 +94,41 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         let appDelegate = UIApplication.shared.delegate as! AppDelegate
         dataController = appDelegate.dataController
         
-        newCollectionButton.isHidden = true
-        newCollectionButton.isEnabled = false
-        // Add the location pin for the MapView
-        addPin()
-        
-        // setupFetchedResultsController()
-        
+     
     }
     
-    override func viewDidAppear(_ animated: Bool) {
+    override func viewWillDisappear(_ animated: Bool) {
         fetchResultController = nil
     }
-
+    
     // MARK: UICollectionViewDataSource
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-        // #warning Incomplete implementation, return the number of sections
-         return fetchResultController.sections?.count ?? 1
+         return 1
     }
     
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         // #warning Incomplete implementation, return the number of items
         // @NSManaged public var photos: NSSet?
-        let sectionInfo = fetchResultController.sections?[section]
+        guard let controller = fetchResultController else {
+            return 0
+        }
+        let sectionInfo = controller.sections?[section]
         return sectionInfo?.numberOfObjects ?? 0
         
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        
+        let photo = fetchResultController.object(at: indexPath)
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as? PhotoCollectionViewCell
         
         // Configure set the cell with photo
         // photoPlaceHolder
-        cell?.flickrImageView.image = UIImage(named: placeholder)
-        
+        if let image = photo.image {
+            cell?.flickrImageView.image = UIImage(data: image)
+        } else {
+            cell?.flickrImageView.image = UIImage(named: placeholder)
+        }
         return cell!
     }
     
@@ -175,11 +190,13 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         if newCollectionButton.titleLabel?.text == defaultButtonLabel {
             // fetch new collection
             sendGetRequest()
+            // DO we need to reload? if we have the core date delegate?
             photoCollectionView.reloadData()
         } else {
             // remove the cell
             photoCollectionView.deleteItems(at: removePhotos!)
             photoCollectionView.reloadData()
+            removePhotos?.removeAll()
         }
     }
     
@@ -235,139 +252,114 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             return
         }
         
-        // TODO : we need to persist the Data into Core Data
-        // First check if the Album for this place is exist, If not we need to create a new Album to persist
-        // How can we add the Photos to Album ??
-        /*
-         struct PhotoSearchResponse:Decodable {
-         let photos:PhotoSearchResult
-         let stat:String
-         }
-         struct PhotoSearchResult:Decodable {
-         let page:String
-         let pages:String
-         let perpage:String
-         let total:String
-         let photos:[FlickrPhoto]
-         }
-         */
-        
-        guard let flickrPhotos = response.photos.photos else {
+        guard let flickrPhotos = response.photos.photo else {
             print("Error! no flickr photos")
             return
         }
         
         if flickrPhotos.count > 0 {
-            // TODO: 1. Map the data to URL 2. create an Album and add core data
+            // TODO: 1. Map the data to URL 2. add photo and persists the photo
             // TODO: Traverse through the loop and map the URL
-            // Add the URL to the Album
-            // 1. NEED TO CREATE ALBUM HERE
             for photoInfo in flickrPhotos {
-                let photoURL:URL = VirtualTourClient.mapPhotoToURL(id: photoInfo.id, secret: photoInfo.secret, farmid: photoInfo.farm, serverid: photoInfo.server)
-                
-                // TODO: need to add one by one into the Album
-                
-                // 2. ADD PHOTOS so that the Collection View can pick up the data from fetchResultController
+                let photoURL:URL = VirtualTourClient.mapPhotoToURL(id: photoInfo.id, secret: photoInfo.secret, farmid: "\(photoInfo.farm)", serverid: photoInfo.server)
+                // download the photo from URL, Handler should add the Photo into the Core Data!!
+                print("map photo id: \(photoInfo.id)")
+                print("mapped photo url: \(photoURL.absoluteString)")
+                VirtualTourClient.photoImageDownload(url: photoURL, completionHandler: HandlePhotoSave(data:error:))
             }
             
+            // reload the Collection View
+            // photoCollectionView.reloadData()
+            // we need to show 'New Collection' button
+            newCollectionButton.isHidden = false
+            newCollectionButton.isEnabled = true
+            setupPhotosFetchedResultsController()
         }
-
         
-        // reload the Collection View
-        photoCollectionView.reloadData()
-        // we need to show 'New Collection' button
-        newCollectionButton.isHidden = false
-        newCollectionButton.isEnabled = true
+        
+        
     }
     
+    
+    func HandlePhotoSave(data:Data?, error:Error?) {
+        
+        guard let data = data else {
+            fatalError("Unable to get download image : \(error?.localizedDescription)")
+            return
+        }
+        
+        let photoImage = UIImage(data: data)
+        // Save image to Core Data
+        addPhoto(image: photoImage!)
+        print("Download Finished and added into Core Data")
+    }
     
     // MARK: Core Data functions
-    
-    func addPhoto(url:URL){
+    // Image is stored as Binary Type
+    // The specifics of storing an image is left to Core Data by activating the “Allows External Storage” option.
+    func addPhoto(image:UIImage) {
         let photo = Photo(context: dataController.viewContext)
-        // HOW To ADD the photo ?
-        
-        try? dataController.viewContext.save()
-        
-    }
-    
-    func deleteAlbum() {
-    
-    }
-    
-    
-    // Album operations on Photos
-    /*
-     @objc(addPhotosObject:)
-     @NSManaged public func addToPhotos(_ value: Photo)
-     
-     @objc(removePhotosObject:)
-     @NSManaged public func removeFromPhotos(_ value: Photo)
-     
-     @objc(addPhotos:)
-     @NSManaged public func addToPhotos(_ values: NSSet)
-     
-     @objc(removePhotos:)
-     @NSManaged public func removeFromPhotos(_ values: NSSet)
-     */
-    
-    /**
-     let predicateIsNumber = NSPredicate(format: "isStringOrNumber == %@", NSNumber(value: false))
-     let predicateIsEnabled = NSPredicate(format: "isEnabled == %@", NSNumber(value: true))
-     let andPredicate = NSCompoundPredicate(type: .and, subpredicates: [predicateIsNumber, predicateIsEnabled])
-     
-     //check here for the sender of the message
-     let fetchRequestSender = NSFetchRequest<NSFetchRequestResult>(entityName: "Keyword")
-     fetchRequestSender.predicate = andPredicate
-     **/
-    
-    // try to fetch the Album
-    /*
-    fileprivate func setupFetchedResultsController() {
-        let fetchRequest:NSFetchRequest<Album> = Album.fetchRequest()
-        // TODO: Need to  update the predicate
-        let predicateLatitude = NSPredicate(format: "lat == %@", lat!)
-        let predicateLongtitude = NSPredicate(format: "long == %@", lon!)
-        let andPredicate = NSCompoundPredicate(type: NSCompoundPredicate.LogicalType.and, subpredicates: [predicateLatitude, predicateLongtitude])
-        fetchRequest.predicate = andPredicate
-        let sortDescriptor = NSSortDescriptor(key: "createDate", ascending: true)
-        fetchRequest.sortDescriptors = [sortDescriptor]
-        fetchResultController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
-        
-        fetchResultController.delegate = self
+        // HOW To add the photo image ?
+        let jpegImage = image.jpegData(compressionQuality: 1)
+        photo.image = jpegImage
+        photo.createDate = Date()
         do {
-            try fetchResultController.performFetch()
+             try dataController.viewContext.save()
+             print("CORE DATA: Save photo!")
         } catch {
-            fatalError("Error when try to fetch the album \(error.localizedDescription)")
+            fatalError("save photo error: \(error.localizedDescription)")
         }
-    } */
+    }
     
+    func deletePhoto() {
+    
+    }
     
     fileprivate func setupPhotosFetchedResultsController() {
        let fetchRequestPhoto:NSFetchRequest<Photo> = Photo.fetchRequest()
-       let predicate = NSPredicate(format: "album == %@", album)
+       let predicate = NSPredicate(format: "pin == %@", pin)
        fetchRequestPhoto.predicate = predicate
-        let sortDescriptor = NSSortDescriptor(key: "creationDate", ascending: true)
+        let sortDescriptor = NSSortDescriptor(key: "createDate", ascending: true)
         fetchRequestPhoto.sortDescriptors = [sortDescriptor]
 
-        fetchResultController = NSFetchedResultsController(fetchRequest: fetchRequestPhoto, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: "\(album)-photos")
+        fetchResultController = NSFetchedResultsController(fetchRequest: fetchRequestPhoto, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
         fetchResultController.delegate = self
 
         do {
             try fetchResultController.performFetch()
+            print("data we can fetch is : \(fetchResultController.fetchedObjects?.count)")
+            if let count = fetchResultController.fetchedObjects?.count {
+                if count == 0 {
+                    showNoDataLabel()
+                }
+            }
+            
         } catch {
             fatalError("The fetch could not be performed: \(error.localizedDescription)")
         }
     }
-    
 }
 
 // MARK: extension with NSFetchedResultsControllerDelegate
+
+// A delegate protocol that describes the methods that will be called by the associated fetched results controller when the fetch results have changed.
 extension PhotoAlbumViewController:NSFetchedResultsControllerDelegate {
     
     func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
         
         //
+        switch type {
+        case .insert:
+            photoCollectionView.insertItems(at: [newIndexPath!])
+            break
+        case .delete:
+            photoCollectionView.deleteItems(at: [newIndexPath!])
+            break
+        case .update:
+           photoCollectionView.reloadItems(at: [newIndexPath!])
+        case .move:
+            photoCollectionView.moveItem(at: indexPath!, to: newIndexPath!)
+        }
         
     }
     
@@ -378,9 +370,8 @@ extension PhotoAlbumViewController:NSFetchedResultsControllerDelegate {
     }
     
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-        
-        //
-        
+        // reload data
+        photoCollectionView.reloadData()
     }
     
     func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
