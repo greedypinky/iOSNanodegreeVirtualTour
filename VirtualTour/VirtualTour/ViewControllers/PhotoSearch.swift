@@ -30,7 +30,7 @@ struct PhotoSearch:Codable {
     var lon:Double
     var api_key:String
     var in_gallery:Bool?=false
-    var per_page:Int?=100
+    var per_page:Int=100
     var page:Int=1
     
 //    lat (Optional)

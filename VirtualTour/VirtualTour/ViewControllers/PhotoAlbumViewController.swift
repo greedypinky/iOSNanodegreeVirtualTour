@@ -27,7 +27,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     var pin:Pin!
     var lat:Double?=0.0
     var lon:Double?=0.0
-    var per_page:Int?=10
+    var per_page:Int=30
     var removePhotos:[IndexPath]?
     
     
@@ -73,8 +73,6 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             // If the Photo Album view is opened for a pin that previously had photos assigned, they are immediately displayed. No new download is needed.
             setupPhotosFetchedResultsController()
         }
-        
-       
     }
     
     /**

@@ -5,24 +5,14 @@ class VirtualTourClient {
     
     enum FlickrEndpoint {
         
-        case getSearch(lat:Double,lon:Double)
+        case getSearch(lat:Double,lon:Double,per_page:Int)
         
         case getPhoto(id:String, secret:String, farmid:String, serverid:String)
 
-        // computed string
-        // use URLComponents to compose the component
-        // method=flickr.photos.search
-        // api_key=2c07d995ce5f68270fb0a9fcc3dfcfcb
-        // lat=38.905351009168896
-        // lon=-77.129282981547973
-        // format=json
-        // nojsoncallback=1
-        // var in_gallery:Bool?=false
-        // var per_page:Int?=100
         var stringValue:String {
             
             switch self {
-                case let .getSearch(lat,lon):
+                case let .getSearch(lat,lon,per_page):
                     // Hardcode the lat and lon for now
                     let api = FlickrAPI()
                     var urlComponents = api.getURLComponents()
@@ -33,11 +23,9 @@ class VirtualTourClient {
                     let longitude = URLQueryItem(name: "lon", value: "\(lon)")
                     let format = URLQueryItem(name: "format", value: "json")
                     let nojsoncallback = URLQueryItem(name: "nojsoncallback", value: "1")
-                    let per_page = URLQueryItem(name: "per_page", value: "100")
-                    urlComponents.queryItems = [method,apikey,latitude,longitude,format,nojsoncallback]
+                    let per_page = URLQueryItem(name: "per_page", value: "\(per_page)")
+                    urlComponents.queryItems = [method,apikey,latitude,longitude,format,nojsoncallback,per_page]
                     return urlComponents.url!.absoluteString
-                    
-//                    return "https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=2c07d995ce5f68270fb0a9fcc3dfcfcb&lat=38.905351009168896&lon=-77.129282981547973&format=json&nojsoncallback=1&auth_token=72157677839136247-86cb0c61ef9355cd&api_sig=c37af41a57a1ce1d71c5cf1335b1ed5a"
                 
                 case let .getPhoto(id, secret, farmid, serverid):
                     // URL mapping https://www.flickr.com/services/api/misc.urls.html
@@ -63,17 +51,12 @@ class VirtualTourClient {
     class func photoGetRequest<RequestType:Encodable,ResponseType:Decodable>(photoSearch:RequestType, responseType: ResponseType.Type,completionHandler: @escaping (ResponseType?,Error?) -> Void) {
     
         let search = photoSearch as! PhotoSearch
-        let endpoint:URL = FlickrEndpoint.getSearch(lat: search.lat, lon: search.lon).url
+        let endpoint:URL = FlickrEndpoint.getSearch(lat: search.lat, lon: search.lon, per_page:search.per_page).url
         print("Endpoint URL is \(endpoint)")
         var request = URLRequest(url: endpoint)
         request.httpMethod = "GET"
-//        request.addValue(APIRequestKey.applicationID, forHTTPHeaderField: "X-Parse-Application-Id")
-//        request.addValue(APIRequestKey.restapikey, forHTTPHeaderField: "X-Parse-REST-API-Key")
-        
         let downloadTask = URLSession.shared.dataTask(with: request) { (data, response, error) in
-            // guard if there is data
-            // otherwise return the alert error
-            // first guard no error
+  
             guard error == nil else {
                 completionHandler(nil, error)
                 return
@@ -143,8 +126,4 @@ class VirtualTourClient {
     class func mapPhotoToURL(id:String, secret:String, farmid:String, serverid:String) -> URL {
         return FlickrEndpoint.getPhoto(id: id, secret: secret, farmid: farmid, serverid: serverid).url
     }
-    
-    
-    
-    
 }
