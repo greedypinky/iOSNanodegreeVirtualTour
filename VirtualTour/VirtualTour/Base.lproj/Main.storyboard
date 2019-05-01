@@ -95,7 +95,7 @@
                                     <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
                                 </collectionViewFlowLayout>
                                 <cells>
-                                    <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" id="Mtn-n0-sXo" customClass="PhotoCollectionViewCell" customModule="VirtualTour" customModuleProvider="target">
+                                    <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="photoCell" id="Mtn-n0-sXo" customClass="PhotoCollectionViewCell" customModule="VirtualTour" customModuleProvider="target">
                                         <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO">
@@ -116,6 +116,9 @@
                                             <constraint firstItem="Xwa-Jj-qor" firstAttribute="centerX" secondItem="Mtn-n0-sXo" secondAttribute="centerX" id="ZE9-zx-e9H"/>
                                             <constraint firstItem="Xwa-Jj-qor" firstAttribute="centerY" secondItem="Mtn-n0-sXo" secondAttribute="centerY" id="fbj-uY-UyW"/>
                                         </constraints>
+                                        <connections>
+                                            <outlet property="flickrImageView" destination="Xwa-Jj-qor" id="g0U-ib-EXd"/>
+                                        </connections>
                                     </collectionViewCell>
                                 </cells>
                             </collectionView>

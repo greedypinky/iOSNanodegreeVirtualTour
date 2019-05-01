@@ -301,6 +301,8 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         let jpegImage = image.jpegData(compressionQuality: 1)
         photo.image = jpegImage
         photo.createDate = Date()
+        // fixed the issue suggested by mentor
+        photo.pin = pin
         do {
              try dataController.viewContext.save()
              print("CORE DATA: Save photo!")
