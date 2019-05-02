@@ -23,12 +23,14 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     let removeButtonLabel = "Remove Selected Pictures"
     let defaultButtonLabel = "New Collection"
     
-    let placeholderPic = "https://picsum.photos/200"
+    //let placeholderPic = "https://picsum.photos/200"
     var pin:Pin!
-    var lat:Double?=0.0
-    var lon:Double?=0.0
+    //var lat:Double?=0.0
+    //var lon:Double?=0.0
     var per_page:Int=30
     var removePhotos:[IndexPath]?
+    var isRemoveMode:Bool = false
+    var noDataLabel:UILabel!
     
     
     // implicit unwrap
@@ -42,6 +44,15 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        let frame = CGRect(x: 0, y: 0, width: photoCollectionView.bounds.width, height: photoCollectionView.bounds.height)
+        noDataLabel = UILabel(frame: frame)
+        view.addSubview(noDataLabel)
+        noDataLabel.text = "This pin has no images"
+        noDataLabel.textAlignment = NSTextAlignment.center
+        
+        showNoDataLabel(show: false)
+        
         photoCollectionView.allowsMultipleSelection = true
         photoCollectionView.dataSource = self
         photoCollectionView.delegate = self
@@ -61,18 +72,13 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         
         guard pin != nil else {
             fatalError("Pin has no data!")
-            showNoDataLabel()
+            showNoDataLabel(show: true)
             return
         }
         
-        // When a Photo Album View is opened for a pin that does not yet have any photos, it initiates a download from Flickr.
-        if pin.photos?.count == 0 {
-            let photoSearch = PhotoSearch(lat: lat!, lon: lon!, api_key: FlickrAPI.key, in_gallery: true, per_page: per_page, page:1)
-            VirtualTourClient.photoGetRequest(photoSearch: photoSearch, responseType: PhotoSearchResponse.self, completionHandler: handleGetResponse(res:error:))
-        } else {
-            // If the Photo Album view is opened for a pin that previously had photos assigned, they are immediately displayed. No new download is needed.
-            setupPhotosFetchedResultsController()
-        }
+        // If the Photo Album view is opened for a pin that previously had photos assigned, they are immediately displayed. No new download is needed.
+        setupPhotosFetchedResultsController()
+        
     }
     
     /**
@@ -82,17 +88,14 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     private func sendGetRequest() {
         // fetch 50 different set of photos randomly
         let page:Int = Int.random(in: 1...50)
-        let photoSearch = PhotoSearch(lat: lat!, lon: lon!, api_key: FlickrAPI.key, in_gallery: true, per_page: per_page, page:page)
+        let photoSearch = PhotoSearch(lat: pin.lat, lon: pin.long, api_key: FlickrAPI.key, in_gallery: true, per_page: per_page, page:page)
         // TODO: Request Flickr Photos from the info we get from the PIN
         VirtualTourClient.photoGetRequest(photoSearch: photoSearch, responseType: PhotoSearchResponse.self, completionHandler: handleGetResponse(res:error:))
     }
     
     override func viewWillAppear(_ animated: Bool) {
-        
         let appDelegate = UIApplication.shared.delegate as! AppDelegate
         dataController = appDelegate.dataController
-        
-     
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -112,6 +115,9 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             return 0
         }
         let sectionInfo = controller.sections?[section]
+        if sectionInfo?.numberOfObjects == 0 {
+            showNoDataLabel(show: true)
+        }
         return sectionInfo?.numberOfObjects ?? 0
         
     }
@@ -144,18 +150,14 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         // select will just grey out the cell
         // update the button label
         //collectionView.deleteItems(at: [indexPath])
-        toggleButtonLabel()
-        if newCollectionButton.titleLabel?.text == removeButtonLabel {
+        if newCollectionButton.titleLabel?.text == defaultButtonLabel {
+            print("add photo indexpath to the array")
             removePhotos?.append(indexPath)
             // TODO: how to make the cell grey ??
              let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as? PhotoCollectionViewCell
-            cell?.isOpaque = true
-        } else {
-            // TODO: remove the photo to be deleted
-             removePhotos?.append(indexPath)
-            // if the list count is zero reset the button to be the default button label
-            if removePhotos?.count == 0 {
-                newCollectionButton.titleLabel?.text = defaultButtonLabel
+            cell?.isHighlighted = true
+           if let count = removePhotos?.count, count > 1 {
+                newCollectionButton.titleLabel?.text = removeButtonLabel
             }
         }
     }
@@ -189,17 +191,25 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             // fetch new collection
             sendGetRequest()
             // DO we need to reload? if we have the core date delegate?
-            photoCollectionView.reloadData()
+            // photoCollectionView.reloadData()
         } else {
             // remove the cell
-            photoCollectionView.deleteItems(at: removePhotos!)
-            photoCollectionView.reloadData()
-            removePhotos?.removeAll()
+            if isRemoveMode {
+                // TODO: Need to loop through the remove photo array and delete from CoreData
+                for indexpath in removePhotos! {
+                    let deleterow:NSManagedObject = fetchResultController.object(at: indexpath)
+                    fetchResultController.managedObjectContext.delete(deleterow)
+                    try! fetchResultController.managedObjectContext.save()
+                }
+                removePhotos?.removeAll()
+                isRemoveMode = false
+                newCollectionButton.titleLabel?.text == defaultButtonLabel
+            }
         }
     }
     
     private func addPin() {
-        let coordinate = CLLocationCoordinate2D(latitude: lat!, longitude: lon!)
+        let coordinate = CLLocationCoordinate2D(latitude: pin.lat, longitude: pin.long)
         let annotation =  MKPointAnnotation()
         let region = MKCoordinateRegion(center: coordinate, span: MKCoordinateSpan(latitudeDelta: 0.1,longitudeDelta: 0.1))
         annotation.coordinate = coordinate
@@ -210,27 +220,27 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     
     
     private func toggleButtonLabel() {
-        
-        if newCollectionButton.titleLabel?.text == defaultButtonLabel {
+    
+        if !isRemoveMode && newCollectionButton.titleLabel?.text == defaultButtonLabel {
             newCollectionButton.titleLabel?.text = removeButtonLabel
+            isRemoveMode = true
         } else {
             newCollectionButton.titleLabel?.text = defaultButtonLabel
+            isRemoveMode = false
         }
     }
     
     
-    private func showNoDataLabel() {
-        
-        let frame = CGRect(x: 0, y: 0, width: photoCollectionView.bounds.width, height: photoCollectionView.bounds.height)
-        var noDataLabel:UILabel = UILabel(frame: frame)
-        view.addSubview(noDataLabel)
-        noDataLabel.isHidden = false
-        noDataLabel.text = "This pin has no images"
-        noDataLabel.textAlignment = NSTextAlignment.center
-        photoCollectionView.backgroundView = noDataLabel
-        // photoCollectionView.isHidden = true
+    private func showNoDataLabel(show:Bool) {
+        if show {
+            noDataLabel.isHidden = false
+            photoCollectionView.backgroundView = noDataLabel
+        } else {
+            noDataLabel.isHidden = true
+            photoCollectionView.backgroundView = nil
+        }
     }
-    
+
     
   
     // MARK: Network request handler
@@ -252,15 +262,14 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         
         guard let flickrPhotos = response.photos.photo else {
             print("Error! no flickr photos")
-            return
-        }
+            return        }
         
         if flickrPhotos.count > 0 {
             // TODO: 1. Map the data to URL 2. add photo and persists the photo
             // TODO: Traverse through the loop and map the URL
             for photoInfo in flickrPhotos {
                 let photoURL:URL = VirtualTourClient.mapPhotoToURL(id: photoInfo.id, secret: photoInfo.secret, farmid: "\(photoInfo.farm)", serverid: photoInfo.server)
-                // download the photo from URL, Handler should add the Photo into the Core Data!!
+                // download the photo from URL, Handler should adds the Photo into the Core Data!!
                 print("map photo id: \(photoInfo.id)")
                 print("mapped photo url: \(photoURL.absoluteString)")
                 VirtualTourClient.photoImageDownload(url: photoURL, completionHandler: HandlePhotoSave(data:error:))
@@ -271,6 +280,11 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             // we need to show 'New Collection' button
             newCollectionButton.isHidden = false
             newCollectionButton.isEnabled = true
+            
+            // TODO: We need to check if we already have the data otherwise we need to reset the result.
+            // will this work ??
+            // fetchResultController.managedObjectContext.deletedObjects
+            
             setupPhotosFetchedResultsController()
         }
         
@@ -330,7 +344,9 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             print("data we can fetch is : \(fetchResultController.fetchedObjects?.count)")
             if let count = fetchResultController.fetchedObjects?.count {
                 if count == 0 {
-                    showNoDataLabel()
+                    // First time Fetch if Pin has no photos
+                    let photoSearch = PhotoSearch(lat: pin.lat, lon: pin.long, api_key: FlickrAPI.key, in_gallery: true, per_page: per_page, page:1)
+                    VirtualTourClient.photoGetRequest(photoSearch: photoSearch, responseType: PhotoSearchResponse.self, completionHandler: handleGetResponse(res:error:))
                 }
             }
             
