@@ -21,7 +21,7 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
     
     var editMode = false
     var rightBarButton:UIBarButtonItem?
-    var pin:Pin?
+    var pin:Pin!
     var tabLocationLongtitude:Double!
     var tabLocationLatitude:Double!
     var selectedPinLocationCoordinate:CLLocationCoordinate2D?
@@ -181,7 +181,7 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
     // when will this be called?
     func addPinToCoreData(lat:Double, lon:Double){
         
-        var pin:Pin = Pin(context: dataController.viewContext)
+        pin = Pin(context: dataController.viewContext)
         // HOW To ADD the photo ?
         pin.createDate = Date()
         pin.lat = lat
@@ -211,6 +211,7 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
                 // let's create an new album
                 addPinToCoreData(lat: lat, lon: lon)
             } else {
+                print("we found existing pin")
                 let existingPins:[Pin] = fetchResultController.fetchedObjects!
                 pin = existingPins[0]
             }
