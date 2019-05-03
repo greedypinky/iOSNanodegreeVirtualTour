@@ -159,7 +159,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
              print("size of the removed photos \(removePhotos?.count)")
             // TODO: how to make the cell grey ??
              let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as? PhotoCollectionViewCell
-            cell?.flickrImageView.isHighlighted = true
+            cell?.flickrImageView.alpha = 0.5
             // cell?.isHighlighted = true
             print("what is the button title \(newCollectionButton.titleLabel?.text)")
             print("what is the mode? \(isRemoveMode)")
@@ -201,6 +201,8 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     // When tab on New Collection or
     @IBAction func getNewCollection(_ sender: Any) {
         if newCollectionButton.titleLabel?.text == defaultButtonLabel {
+            // remove the photos of the PIN first?
+            
             // fetch new collection
             sendGetRequest()
             // DO we need to reload? if we have the core date delegate?
@@ -339,7 +341,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     }
     
     func deletePhoto() {
-    
+
     }
     
     fileprivate func setupPhotosFetchedResultsController() {
