@@ -121,18 +121,20 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
         print("did select")
         print("what is the edit mode? \(editMode)" )
         let annotation = view.annotation
+        tabLocationLongtitude = annotation?.coordinate.longitude
+        tabLocationLatitude = annotation?.coordinate.latitude
+        print("PIN did select with lat \(tabLocationLatitude) and long \(tabLocationLongtitude)")
         if !editMode {
-            tabLocationLongtitude = annotation?.coordinate.longitude
-            tabLocationLatitude = annotation?.coordinate.latitude
-            print("PIN did select with lat \(tabLocationLatitude) and long \(tabLocationLongtitude)")
             //  When a pin is tapped, the app will navigate to the Photo Album view associated with the pin.
+            // fetch the tapped pin from Core Data again
             setupFetchedResultsController(lat: tabLocationLatitude, lon: tabLocationLongtitude)
             performSegue(withIdentifier: "showPhotoAlbum", sender: self)
         } else {
             print("will remove annotation!")
             // When a pin is tapped, remove the annotation from the mapView
             mapView.removeAnnotation(annotation!)
-            // TODO: need to remove from core data as well
+            // TODO: need to get the PIN instance from Core Data and Remove from core data as well
+            print("will remove also from the core data!")
             let pin:Pin = Pin(context: dataController.viewContext)
             fetchResultController.managedObjectContext.delete(pin)
         }
@@ -195,6 +197,7 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
         print("Pin: setup fetch result controller!")
         let fetchRequest:NSFetchRequest<Pin> = Pin.fetchRequest()
         // TODO: Need to  update the predicate
+        print("predicate is \(lat) and \(lon)")
         let predicateLatitude = NSPredicate(format: "lat == %@", lat)
         let predicateLongtitude = NSPredicate(format: "long == %@", lon)
         let andPredicate = NSCompoundPredicate(type: NSCompoundPredicate.LogicalType.and, subpredicates: [predicateLatitude, predicateLongtitude])
@@ -207,8 +210,9 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
         do {
             try fetchResultController.performFetch()
             // if no data object is fetched, then persists the Pin
-            if fetchResultController.fetchedObjects?.count == 0 {
-                // let's create an new album
+            if let count = fetchResultController.fetchedObjects?.count, count == 0 {
+                // let's create an new pin
+                print("Add new pin")
                 addPinToCoreData(lat: lat, lon: lon)
             } else {
                 print("we found existing pin")

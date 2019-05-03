@@ -28,7 +28,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     //var lat:Double?=0.0
     //var lon:Double?=0.0
     var per_page:Int=30
-    var removePhotos:[IndexPath]?
+    var removePhotos:[IndexPath]? = []
     var isRemoveMode:Bool = false
     var noDataLabel:UILabel!
     
@@ -59,6 +59,9 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         
         newCollectionButton.isHidden = true
         newCollectionButton.isEnabled = false
+        
+        newCollectionButton.titleLabel?.font = UIFont.systemFont(ofSize: 11.0)
+        newCollectionButton.titleLabel?.lineBreakMode = .byTruncatingTail
         
         // Add the location pin for the MapView
         addPin()
@@ -150,21 +153,26 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         // select will just grey out the cell
         // update the button label
         //collectionView.deleteItems(at: [indexPath])
-        if newCollectionButton.titleLabel?.text == defaultButtonLabel {
+        
             print("add photo indexpath to the array")
             removePhotos?.append(indexPath)
              print("size of the removed photos \(removePhotos?.count)")
             // TODO: how to make the cell grey ??
              let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as? PhotoCollectionViewCell
-            cell?.isHighlighted = true
+            cell?.flickrImageView.isHighlighted = true
+            // cell?.isHighlighted = true
             print("what is the button title \(newCollectionButton.titleLabel?.text)")
+            print("what is the mode? \(isRemoveMode)")
             if let count = removePhotos?.count, count > 0 {
-            print("what is the button title \(newCollectionButton.titleLabel?.text)")
-            newCollectionButton.titleLabel?.text = removeButtonLabel
-            isRemoveMode = true
+                print("what is the mode? \(isRemoveMode)")
+                // if we have remove pending pictures, and first time edit mode is not updated
+                // set the button to different label
+                if !isRemoveMode {
+                    newCollectionButton.titleLabel?.text = removeButtonLabel
+                    isRemoveMode = true
+                }
+               
             }
-            
-        }
     }
     
     /*
@@ -224,16 +232,16 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     }
     
     
-    private func toggleButtonLabel() {
-    
-        if !isRemoveMode && newCollectionButton.titleLabel?.text == defaultButtonLabel {
-            newCollectionButton.titleLabel?.text = removeButtonLabel
-            isRemoveMode = true
-        } else {
-            newCollectionButton.titleLabel?.text = defaultButtonLabel
-            isRemoveMode = false
-        }
-    }
+//    private func toggleButtonLabel() {
+//
+//        if !isRemoveMode && newCollectionButton.titleLabel?.text == defaultButtonLabel {
+//            newCollectionButton.titleLabel?.text = removeButtonLabel
+//            isRemoveMode = true
+//        } else {
+//            newCollectionButton.titleLabel?.text = defaultButtonLabel
+//            isRemoveMode = false
+//        }
+//    }
     
     
     private func showNoDataLabel(show:Bool) {
