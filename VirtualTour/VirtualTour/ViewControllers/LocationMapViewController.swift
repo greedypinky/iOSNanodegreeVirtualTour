@@ -214,6 +214,7 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
                 print("we found existing pin")
                 let existingPins:[Pin] = fetchResultController.fetchedObjects!
                 pin = existingPins[0]
+                print("we found existing pin with created date: \(pin.createDate)")
             }
         } catch {
             fatalError("Error when try to fetch the album \(error.localizedDescription)")

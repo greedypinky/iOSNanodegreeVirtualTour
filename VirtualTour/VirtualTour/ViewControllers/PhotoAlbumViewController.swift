@@ -69,16 +69,16 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     }
     
     private func showPhotos() {
-        
-        guard pin != nil else {
-            fatalError("Pin has no data!")
-            showNoDataLabel(show: true)
-            return
-        }
-        
+        if pin.photos?.count == 0 {
+            // First time Fetch if Pin has no photos
+            print("First time fetch")
+            let photoSearch = PhotoSearch(lat: pin.lat, lon: pin.long, api_key: FlickrAPI.key, in_gallery: true, per_page: per_page, page:1)
+            VirtualTourClient.photoGetRequest(photoSearch: photoSearch, responseType: PhotoSearchResponse.self, completionHandler: handleGetResponse(res:error:))
+        } else {
         // If the Photo Album view is opened for a pin that previously had photos assigned, they are immediately displayed. No new download is needed.
-        setupPhotosFetchedResultsController()
-        
+            print("Fetch from core data!")
+            setupPhotosFetchedResultsController()
+        }
     }
     
     /**
@@ -153,12 +153,17 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         if newCollectionButton.titleLabel?.text == defaultButtonLabel {
             print("add photo indexpath to the array")
             removePhotos?.append(indexPath)
+             print("size of the removed photos \(removePhotos?.count)")
             // TODO: how to make the cell grey ??
              let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as? PhotoCollectionViewCell
             cell?.isHighlighted = true
-           if let count = removePhotos?.count, count > 1 {
-                newCollectionButton.titleLabel?.text = removeButtonLabel
+            print("what is the button title \(newCollectionButton.titleLabel?.text)")
+            if let count = removePhotos?.count, count > 0 {
+            print("what is the button title \(newCollectionButton.titleLabel?.text)")
+            newCollectionButton.titleLabel?.text = removeButtonLabel
+            isRemoveMode = true
             }
+            
         }
     }
     
@@ -345,8 +350,8 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             if let count = fetchResultController.fetchedObjects?.count {
                 if count == 0 {
                     // First time Fetch if Pin has no photos
-                    let photoSearch = PhotoSearch(lat: pin.lat, lon: pin.long, api_key: FlickrAPI.key, in_gallery: true, per_page: per_page, page:1)
-                    VirtualTourClient.photoGetRequest(photoSearch: photoSearch, responseType: PhotoSearchResponse.self, completionHandler: handleGetResponse(res:error:))
+//                    let photoSearch = PhotoSearch(lat: pin.lat, lon: pin.long, api_key: FlickrAPI.key, in_gallery: true, per_page: per_page, page:1)
+//                    VirtualTourClient.photoGetRequest(photoSearch: photoSearch, responseType: PhotoSearchResponse.self, completionHandler: handleGetResponse(res:error:))
                 }
             }
             
