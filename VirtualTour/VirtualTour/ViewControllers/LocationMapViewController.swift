@@ -136,10 +136,11 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
             print("will remove annotation!")
             // When a pin is tapped, remove the annotation from the mapView
             mapView.removeAnnotation(annotation!)
-            // TODO: need to get the PIN instance from Core Data and Remove from core data as well
+            // Get the PIN instance from Core Data and Remove from core data as well
             print("will remove also from the core data!")
             setupFetchedResultsController(lat: tabLocationLatitude, lon: tabLocationLongtitude)
-            fetchResultController.managedObjectContext.delete(pin)
+            dataController.viewContext.delete(pin)
+            try! dataController.viewContext.save()
         }
     }
     

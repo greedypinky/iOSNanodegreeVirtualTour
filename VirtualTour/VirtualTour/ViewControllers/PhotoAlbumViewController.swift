@@ -339,8 +339,9 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         if removePhotos.count > 0 {
             print("will delete photo from core data!")
             for indexpath in removePhotos {
-                let photoToBeRemoved:NSManagedObject = fetchResultController.object(at: indexpath)
-                fetchResultController.managedObjectContext.delete(photoToBeRemoved)
+                let photoToBeDeleted:NSManagedObject = fetchResultController.object(at: indexpath)
+                // Need to use the persistenceContainer.viewContext
+                dataController.viewContext.delete(photoToBeDeleted)
                 try! fetchResultController.managedObjectContext.save()
             }
             
@@ -358,6 +359,11 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         // we have saved photos
         for photoToBeDeleted in savedPhotos {
             // Delete each photo from Core Data
+            // Need to use the persistenceContainer.viewContext
+            dataController.viewContext.delete(photoToBeDeleted)
+            try! fetchResultController.managedObjectContext.save()
+            // delete also from the Feteched result so that the delete is relected in the CollectionView
+            // OR do we just need to re-fetch the results after the data object is deleted from Core Data?
             fetchResultController.managedObjectContext.delete(photoToBeDeleted)
         }
     }
