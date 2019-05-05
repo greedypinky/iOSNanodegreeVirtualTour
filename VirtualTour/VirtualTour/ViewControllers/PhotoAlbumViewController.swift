@@ -61,6 +61,9 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         // setup New Collection button's property
         newCollectionButton.titleLabel?.font = UIFont.systemFont(ofSize: 18.0)
         newCollectionButton.titleLabel?.lineBreakMode = .byTruncatingTail
+        // automatically reset back to the "New Collection" from Remove Selected Pictures if selected
+        newCollectionButton.setTitle(defaultButtonLabel, for: [.selected,.normal,.highlighted])
+        
         showNewCollectionButton(show:false)
         
         // Add the location pin for the MapView
@@ -146,8 +149,15 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         if let image = photo.image {
             cell?.flickrImageView.image = UIImage(data: image)
         } else {
+            
+//            let activityView = UIActivityIndicatorView(style: .gray)
+//            activityView.center = CGPoint(cell?.contentView.frame.size.height/2, cell?.contentView.frame.size.width/2)
+//            cell?.contentView.addSubview(activityView)
+//            activityView.startAnimating()
             cell?.flickrImageView.image = UIImage(named: placeholder)
         }
+        
+        
         return cell!
     }
     
@@ -190,7 +200,8 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             removePhotos.remove(at: arrayIndex!)
             // check if the array has count = 0
             if removePhotos.count == 0 {
-                newCollectionButton.setTitle(defaultButtonLabel, for: [.selected,.normal,.highlighted])
+                //newCollectionButton.setTitle(defaultButtonLabel, for: [.selected,.normal,.highlighted])
+                newCollectionButton.titleLabel?.text = defaultButtonLabel
                 isRemoveMode = false
             }
         }
@@ -199,10 +210,10 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         print("what is the mode? \(isRemoveMode)")
         if removePhotos.count > 0  {
             print("what is the mode? \(isRemoveMode)")
-            newCollectionButton.setTitle(removeButtonLabel, for: [.selected,.normal,.highlighted])
+            newCollectionButton.titleLabel?.text = removeButtonLabel
             isRemoveMode = true
         } else {
-            newCollectionButton.setTitle(defaultButtonLabel, for: [.selected,.normal,.highlighted])
+            newCollectionButton.titleLabel?.text = defaultButtonLabel
             isRemoveMode = false
         }
     }
@@ -393,6 +404,7 @@ extension PhotoAlbumViewController:NSFetchedResultsControllerDelegate {
             break
         case .delete:
             // when the fetched results are removed, the colletion view item will be removed
+            // ERROR :Encountered  fatal error here when delete items
             photoCollectionView.deleteItems(at: [newIndexPath!])
             break
         case .update:
