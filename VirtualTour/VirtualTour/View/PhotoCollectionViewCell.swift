@@ -12,4 +12,6 @@ class PhotoCollectionViewCell: UICollectionViewCell {
     
     @IBOutlet weak var flickrImageView:UIImageView!
     
+    @IBOutlet weak var opacityView:UIView!
+    
 }

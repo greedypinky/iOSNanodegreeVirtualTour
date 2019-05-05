@@ -22,53 +22,51 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     let placeholder:String = "photoPlaceHolder"
     let removeButtonLabel = "Remove Selected Pictures"
     let defaultButtonLabel = "New Collection"
-    
-    //let placeholderPic = "https://picsum.photos/200"
     var pin:Pin!
-    //var lat:Double?=0.0
-    //var lon:Double?=0.0
     var per_page:Int=30
-    var removePhotos:[IndexPath]? = []
+    var removePhotos:[IndexPath] = []
     var isRemoveMode:Bool = false
     var noDataLabel:UILabel!
-    
-    
-    // implicit unwrap
-    // If the user selects a pin that already has a photo album then the Photo Album view should display the album and the New Collection button should be enabled.
     var fetchResultController:NSFetchedResultsController<Photo>!
+    
+    override func viewWillAppear(_ animated: Bool) {
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        dataController = appDelegate.dataController
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        fetchResultController = nil
+    }
     
     /**
      If no images are found a “No Images” label will be displayed.
      If there are images, then they will be displayed in a collection view.
     */
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        // Setup No Data label
         let frame = CGRect(x: 0, y: 0, width: photoCollectionView.bounds.width, height: photoCollectionView.bounds.height)
         noDataLabel = UILabel(frame: frame)
         view.addSubview(noDataLabel)
         noDataLabel.text = "This pin has no images"
         noDataLabel.textAlignment = NSTextAlignment.center
-        
         showNoDataLabel(show: false)
         
+        // setup ColllectionView's properties
         photoCollectionView.allowsMultipleSelection = true
         photoCollectionView.dataSource = self
         photoCollectionView.delegate = self
         
-        newCollectionButton.isHidden = true
-        newCollectionButton.isEnabled = false
-        
-        newCollectionButton.titleLabel?.font = UIFont.systemFont(ofSize: 11.0)
+        // setup New Collection button's property
+        newCollectionButton.titleLabel?.font = UIFont.systemFont(ofSize: 18.0)
         newCollectionButton.titleLabel?.lineBreakMode = .byTruncatingTail
+        showNewCollectionButton(show:false)
         
         // Add the location pin for the MapView
         addPin()
         // Show photos if there is persisted data, otherwise fetch from flickr
         showPhotos()
-        
-       
     }
     
     private func showPhotos() {
@@ -96,13 +94,27 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         VirtualTourClient.photoGetRequest(photoSearch: photoSearch, responseType: PhotoSearchResponse.self, completionHandler: handleGetResponse(res:error:))
     }
     
-    override func viewWillAppear(_ animated: Bool) {
-        let appDelegate = UIApplication.shared.delegate as! AppDelegate
-        dataController = appDelegate.dataController
-    }
+   
     
-    override func viewWillDisappear(_ animated: Bool) {
-        fetchResultController = nil
+    
+    //  New Collection 's IBAction method
+    @IBAction func getNewCollection(_ sender: Any) {
+        if newCollectionButton.titleLabel?.text == defaultButtonLabel {
+            // remove the photos from Core Data first how??
+            deletePhotoFromFetchedResult()
+            // fetch new collection
+            sendGetRequest()
+            
+        } else {
+            // remove the cell
+            if isRemoveMode {
+                // TODO: Need to loop through the remove photo array and delete from CoreData
+                deletePhotoFromRemovedPhotoArray()
+                removePhotos.removeAll()
+                isRemoveMode = false
+                newCollectionButton.setTitle(defaultButtonLabel, for: [.normal,.selected,.highlighted])
+            }
+        }
     }
     
     // MARK: UICollectionViewDataSource
@@ -112,16 +124,16 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        // #warning Incomplete implementation, return the number of items
-        // @NSManaged public var photos: NSSet?
         guard let controller = fetchResultController else {
             return 0
         }
         let sectionInfo = controller.sections?[section]
-        if sectionInfo?.numberOfObjects == 0 {
+        guard let num = sectionInfo?.numberOfObjects, num > 0 else {
             showNoDataLabel(show: true)
+            return 0
         }
-        return sectionInfo?.numberOfObjects ?? 0
+        
+        return sectionInfo?.numberOfObjects ?? 1
         
     }
     
@@ -130,7 +142,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as? PhotoCollectionViewCell
         
         // Configure set the cell with photo
-        // photoPlaceHolder
+        // else set with photoPlaceHolder
         if let image = photo.image {
             cell?.flickrImageView.image = UIImage(data: image)
         } else {
@@ -150,79 +162,53 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         // TODO: add removal of the item from Collection View
-        // select will just grey out the cell
-        // update the button label
-        //collectionView.deleteItems(at: [indexPath])
         
-            print("add photo indexpath to the array")
-            removePhotos?.append(indexPath)
-             print("size of the removed photos \(removePhotos?.count)")
-            // TODO: how to make the cell grey ??
+            print("didSelectItem at \(indexPath.row)")
+
              let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as? PhotoCollectionViewCell
-            cell?.flickrImageView.alpha = 0.5
-            // cell?.isHighlighted = true
-            print("what is the button title \(newCollectionButton.titleLabel?.text)")
-            print("what is the mode? \(isRemoveMode)")
-            if let count = removePhotos?.count, count > 0 {
-                print("what is the mode? \(isRemoveMode)")
-                // if we have remove pending pictures, and first time edit mode is not updated
-                // set the button to different label
-                if !isRemoveMode {
-                    newCollectionButton.titleLabel?.text = removeButtonLabel
-                    isRemoveMode = true
-                }
-               
-            }
+             removePhotosLogic(selectedCellIndexpath: indexPath, collectionViewCell: cell!)
+        
     }
     
-    /*
-     // Uncomment this method to specify if the specified item should be selected
-     override func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
-     return true
-     } */
     
-    
-    
-     // Uncomment these methods to specify if an action menu should be displayed for the specified item, and react to actions performed on the item
-//     func collectionView(_ collectionView: UICollectionView, shouldShowMenuForItemAt indexPath: IndexPath) -> Bool {
-//     return false
-//     }
-//
-//     func collectionView(_ collectionView: UICollectionView, canPerformAction action: Selector, forItemAt indexPath: IndexPath, withSender sender: Any?) -> Bool {
-//     return false
-//     }
-    
-//     func collectionView(_ collectionView: UICollectionView, performAction action: Selector, forItemAt indexPath: IndexPath, withSender sender: Any?) {
-//
-//     }
-    
-    
-    
-    // When tab on New Collection or
-    @IBAction func getNewCollection(_ sender: Any) {
-        if newCollectionButton.titleLabel?.text == defaultButtonLabel {
-            // remove the photos of the PIN first?
+    private func removePhotosLogic(selectedCellIndexpath:IndexPath, collectionViewCell:PhotoCollectionViewCell ){
+        
+        print("add photo indexpath to the array")
+        // Need to check if no added into the array yet, then add
+        if !removePhotos.contains(selectedCellIndexpath) {
+           removePhotos.append(selectedCellIndexpath)
+            // show the opacity of the cell
+           collectionViewCell.opacityView.isHidden = false
             
-            // fetch new collection
-            sendGetRequest()
-            // DO we need to reload? if we have the core date delegate?
-            // photoCollectionView.reloadData()
         } else {
-            // remove the cell
-            if isRemoveMode {
-                // TODO: Need to loop through the remove photo array and delete from CoreData
-                for indexpath in removePhotos! {
-                    let deleterow:NSManagedObject = fetchResultController.object(at: indexpath)
-                    fetchResultController.managedObjectContext.delete(deleterow)
-                    try! fetchResultController.managedObjectContext.save()
-                }
-                removePhotos?.removeAll()
+            // WHEN user touches the cell again THEN
+            // 1. need to remove the cell from array
+            // 2. need to set the opacity cell to Hidden to show the picture again
+            // 3. if the removePhotos array count is 0, need to reset the buttons
+            collectionViewCell.opacityView.isHidden = true
+            let arrayIndex = removePhotos.firstIndex(of: selectedCellIndexpath)
+            removePhotos.remove(at: arrayIndex!)
+            // check if the array has count = 0
+            if removePhotos.count == 0 {
+                newCollectionButton.setTitle(defaultButtonLabel, for: [.selected,.normal,.highlighted])
                 isRemoveMode = false
-                newCollectionButton.titleLabel?.text == defaultButtonLabel
             }
         }
+        
+        print("what is the button title \(newCollectionButton.titleLabel?.text)")
+        print("what is the mode? \(isRemoveMode)")
+        if removePhotos.count > 0  {
+            print("what is the mode? \(isRemoveMode)")
+            newCollectionButton.setTitle(removeButtonLabel, for: [.selected,.normal,.highlighted])
+            isRemoveMode = true
+        } else {
+            newCollectionButton.setTitle(defaultButtonLabel, for: [.selected,.normal,.highlighted])
+            isRemoveMode = false
+        }
     }
+   
     
+    // UX: Set up the MapView to have the annotation of the selected place
     private func addPin() {
         let coordinate = CLLocationCoordinate2D(latitude: pin.lat, longitude: pin.long)
         let annotation =  MKPointAnnotation()
@@ -233,19 +219,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         mapView.setRegion(region, animated: true)
     }
     
-    
-//    private func toggleButtonLabel() {
-//
-//        if !isRemoveMode && newCollectionButton.titleLabel?.text == defaultButtonLabel {
-//            newCollectionButton.titleLabel?.text = removeButtonLabel
-//            isRemoveMode = true
-//        } else {
-//            newCollectionButton.titleLabel?.text = defaultButtonLabel
-//            isRemoveMode = false
-//        }
-//    }
-    
-    
+    // UX: set visibility of the NoDataLabel
     private func showNoDataLabel(show:Bool) {
         if show {
             noDataLabel.isHidden = false
@@ -255,10 +229,20 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             photoCollectionView.backgroundView = nil
         }
     }
-
     
-  
-    // MARK: Network request handler
+    // UX: set the visibility of the New Collection Button
+    func showNewCollectionButton(show:Bool) {
+        if show {
+            newCollectionButton.isHidden = false
+            newCollectionButton.isEnabled = true
+        } else {
+            newCollectionButton.isHidden = true
+            newCollectionButton.isEnabled = false
+        }
+        
+    }
+
+    // MARK: Fetch Flickr photos request's handler
     func handleGetResponse(res:PhotoSearchResponse?, error:Error?) {
         // PhotoSearchResponse
         // TODO: Set the PhotoSearchResponse data into the Core Data ?
@@ -277,11 +261,13 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         
         guard let flickrPhotos = response.photos.photo else {
             print("Error! no flickr photos")
-            return        }
+            return
+            
+        }
         
         if flickrPhotos.count > 0 {
-            // TODO: 1. Map the data to URL 2. add photo and persists the photo
-            // TODO: Traverse through the loop and map the URL
+            // WHEN there are more than 1 photos from the fetch result
+            // THEN 1. Map the data to create the photo URL 2. Download the photo from the URL 3. Persists the photo in Core Data
             for photoInfo in flickrPhotos {
                 let photoURL:URL = VirtualTourClient.mapPhotoToURL(id: photoInfo.id, secret: photoInfo.secret, farmid: "\(photoInfo.farm)", serverid: photoInfo.server)
                 // download the photo from URL, Handler should adds the Photo into the Core Data!!
@@ -290,22 +276,16 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
                 VirtualTourClient.photoImageDownload(url: photoURL, completionHandler: HandlePhotoSave(data:error:))
             }
             
-            // reload the Collection View
-            // photoCollectionView.reloadData()
-            // we need to show 'New Collection' button
-            newCollectionButton.isHidden = false
-            newCollectionButton.isEnabled = true
-            
-            // TODO: We need to check if we already have the data otherwise we need to reset the result.
-            // will this work ??
-            // fetchResultController.managedObjectContext.deletedObjects
-            
+            // AND 2. We need to retrieve the Stored Photos into FetchedResultController to populate the CollectionView's data
             setupPhotosFetchedResultsController()
+            // AND 3. We need to show 'New Collection' button
+            showNewCollectionButton(show:true)
         }
         
         
         
     }
+    
     
     
     func HandlePhotoSave(data:Data?, error:Error?) {
@@ -322,6 +302,8 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     }
     
     // MARK: Core Data functions
+    
+    // MARK: add photo into Core Data
     // Image is stored as Binary Type
     // The specifics of storing an image is left to Core Data by activating the “Allows External Storage” option.
     func addPhoto(image:UIImage) {
@@ -330,7 +312,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         let jpegImage = image.jpegData(compressionQuality: 1)
         photo.image = jpegImage
         photo.createDate = Date()
-        // fixed the issue suggested by mentor
+        // fixed the issue suggested by mentor, otherwise cannot make a relationship with the Pin Object
         photo.pin = pin
         do {
              try dataController.viewContext.save()
@@ -340,9 +322,36 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         }
     }
     
-    func deletePhoto() {
+    // MARK: Delete photo one by one from CoreData
+    func deletePhotoFromRemovedPhotoArray() {
+        
+        if removePhotos.count > 0 {
+            for indexpath in removePhotos {
+                let photoToBeRemoved:NSManagedObject = fetchResultController.object(at: indexpath)
+                fetchResultController.managedObjectContext.delete(photoToBeRemoved)
+                try! fetchResultController.managedObjectContext.save()
+            }
+            
+        }
 
     }
+    
+    // MARK: Delete photos from the Fetched Result
+    func deletePhotoFromFetchedResult() -> () {
+        
+        guard let savedPhotos = fetchResultController.fetchedObjects else {
+            print("No Photo in fetchedResults!")
+            return
+        }
+        // we have saved photos
+        for photoToBeDeleted in savedPhotos {
+            // Delete each photo from Core Data
+            fetchResultController.managedObjectContext.delete(photoToBeDeleted)
+        }
+    }
+    
+
+  
     
     fileprivate func setupPhotosFetchedResultsController() {
        let fetchRequestPhoto:NSFetchRequest<Photo> = Photo.fetchRequest()
@@ -359,9 +368,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             print("data we can fetch is : \(fetchResultController.fetchedObjects?.count)")
             if let count = fetchResultController.fetchedObjects?.count {
                 if count == 0 {
-                    // First time Fetch if Pin has no photos
-//                    let photoSearch = PhotoSearch(lat: pin.lat, lon: pin.long, api_key: FlickrAPI.key, in_gallery: true, per_page: per_page, page:1)
-//                    VirtualTourClient.photoGetRequest(photoSearch: photoSearch, responseType: PhotoSearchResponse.self, completionHandler: handleGetResponse(res:error:))
+                    print("no photos!")
                 }
             }
             
@@ -380,10 +387,12 @@ extension PhotoAlbumViewController:NSFetchedResultsControllerDelegate {
         
         //
         switch type {
+            
         case .insert:
             photoCollectionView.insertItems(at: [newIndexPath!])
             break
         case .delete:
+            // when the fetched results are removed, the colletion view item will be removed
             photoCollectionView.deleteItems(at: [newIndexPath!])
             break
         case .update:

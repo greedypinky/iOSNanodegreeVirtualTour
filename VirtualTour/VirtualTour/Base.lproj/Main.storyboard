@@ -28,6 +28,9 @@
                                     <constraint firstAttribute="height" constant="40" id="vkw-4V-jlV"/>
                                 </constraints>
                                 <state key="normal" title="Tap Pins to Delete"/>
+                                <connections>
+                                    <action selector="tapPinToDelete:" destination="BYZ-38-t0r" eventType="touchUpInside" id="Mmb-m8-Dgj"/>
+                                </connections>
                             </button>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
@@ -105,19 +108,31 @@
                                                 <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Xwa-Jj-qor" userLabel="flickrImageView">
                                                     <rect key="frame" x="-15" y="-30" width="80" height="80"/>
                                                     <constraints>
-                                                        <constraint firstAttribute="width" constant="80" id="5VV-DW-H4H"/>
-                                                        <constraint firstAttribute="height" constant="80" id="SUv-1r-vxo"/>
+                                                        <constraint firstAttribute="width" constant="80" id="5VV-DW-H4H" userLabel="width = 90"/>
+                                                        <constraint firstAttribute="height" constant="80" id="SUv-1r-vxo" userLabel="height = 90"/>
                                                     </constraints>
                                                 </imageView>
+                                                <view hidden="YES" alpha="0.5" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="in7-fr-jfR" userLabel="opacityView">
+                                                    <rect key="frame" x="-20" y="-20" width="90" height="90"/>
+                                                    <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                    <constraints>
+                                                        <constraint firstAttribute="height" constant="90" id="YJb-py-9XL"/>
+                                                        <constraint firstAttribute="width" constant="90" id="fnE-Ac-WnY"/>
+                                                    </constraints>
+                                                </view>
                                             </subviews>
                                         </view>
                                         <constraints>
                                             <constraint firstAttribute="bottom" secondItem="Xwa-Jj-qor" secondAttribute="bottom" id="86x-9Q-GtA"/>
                                             <constraint firstItem="Xwa-Jj-qor" firstAttribute="centerX" secondItem="Mtn-n0-sXo" secondAttribute="centerX" id="ZE9-zx-e9H"/>
+                                            <constraint firstItem="in7-fr-jfR" firstAttribute="centerY" secondItem="Mtn-n0-sXo" secondAttribute="centerY" id="ezs-qT-jq1"/>
                                             <constraint firstItem="Xwa-Jj-qor" firstAttribute="centerY" secondItem="Mtn-n0-sXo" secondAttribute="centerY" id="fbj-uY-UyW"/>
+                                            <constraint firstItem="in7-fr-jfR" firstAttribute="centerX" secondItem="Mtn-n0-sXo" secondAttribute="centerX" id="hjx-3u-wbx"/>
+                                            <constraint firstAttribute="bottom" secondItem="in7-fr-jfR" secondAttribute="bottom" constant="-20" id="kNt-D9-oD4"/>
                                         </constraints>
                                         <connections>
                                             <outlet property="flickrImageView" destination="Xwa-Jj-qor" id="g0U-ib-EXd"/>
+                                            <outlet property="opacityView" destination="in7-fr-jfR" id="AAM-4X-K6Z"/>
                                         </connections>
                                     </collectionViewCell>
                                 </cells>

@@ -70,10 +70,6 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
         // prepare data for navigate
         if segue.identifier == "showPhotoAlbum" {
             let photoAlbumVC  = segue.destination as! PhotoAlbumViewController
-           ///var pin = Pin(context: dataController.viewContext)
-           // pin.lat = tabLocationLatitude!
-           // pin.long = tabLocationLongtitude!
-            // TODO: NEED TO FIX THIS BUG !!
             photoAlbumVC.pin = pin
         }
     }
@@ -98,6 +94,12 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
             setupFetchedResultsController(lat: mapCoordinate.latitude, lon: mapCoordinate.longitude)
         }
     }
+    
+    
+    @IBAction func tapPinToDelete(_ sender: Any) {
+    }
+    
+    // MARK: MKMapViewDelegate
     
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         // for Pin rendering
@@ -135,7 +137,7 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
             mapView.removeAnnotation(annotation!)
             // TODO: need to get the PIN instance from Core Data and Remove from core data as well
             print("will remove also from the core data!")
-            let pin:Pin = Pin(context: dataController.viewContext)
+            setupFetchedResultsController(lat: tabLocationLatitude, lon: tabLocationLongtitude)
             fetchResultController.managedObjectContext.delete(pin)
         }
     }
@@ -157,8 +159,8 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
     
     // MARK: save the zoom level when app is killed
     /**
- The center of the map and the zoom level should be persistent. If the app is turned off, the map should return to the same state when it is turned on again.
- **/
+        The center of the map and the zoom level should be persistent. If the app is turned off, the map should return to the same state when it is turned on again.
+    **/
     private func saveZoomLevel() {
         
     }
@@ -192,14 +194,18 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
         print("Saved pin to core data")
     }
     
-    // try to fetch the Album
+    // setup fetchedResultsController
+    
     fileprivate func setupFetchedResultsController(lat:Double,lon:Double) {
         print("Pin: setup fetch result controller!")
         let fetchRequest:NSFetchRequest<Pin> = Pin.fetchRequest()
         // TODO: Need to  update the predicate
         print("predicate is \(lat) and \(lon)")
-        let predicateLatitude = NSPredicate(format: "lat == %@", lat)
-        let predicateLongtitude = NSPredicate(format: "long == %@", lon)
+        let latNSNumber:NSNumber = NSNumber.init(value: lat)
+        let longNSNumber:NSNumber = NSNumber.init(value: lon)
+        // fixed by Mentor's suggestion: Latitude and longitude are both Double values, you can't use %@ with this type, need to use NSNumbers instead
+        let predicateLatitude = NSPredicate(format: "lat == %@", latNSNumber)
+        let predicateLongtitude = NSPredicate(format: "long == %@", longNSNumber)
         let andPredicate = NSCompoundPredicate(type: NSCompoundPredicate.LogicalType.and, subpredicates: [predicateLatitude, predicateLongtitude])
         fetchRequest.predicate = andPredicate
         let sortDescriptor = NSSortDescriptor(key: "createDate", ascending: true)
