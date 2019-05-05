@@ -337,6 +337,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     func deletePhotoFromRemovedPhotoArray() {
         
         if removePhotos.count > 0 {
+            print("will delete photo from core data!")
             for indexpath in removePhotos {
                 let photoToBeRemoved:NSManagedObject = fetchResultController.object(at: indexpath)
                 fetchResultController.managedObjectContext.delete(photoToBeRemoved)

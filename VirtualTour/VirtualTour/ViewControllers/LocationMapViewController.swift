@@ -110,6 +110,7 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
             pinView?.canShowCallout = false
             pinView?.pinTintColor = .red
             pinView?.rightCalloutAccessoryView = UIButton(type:.detailDisclosure)
+            pinView?.animatesDrop = true
             
         } else {
             pinView?.annotation = annotation
