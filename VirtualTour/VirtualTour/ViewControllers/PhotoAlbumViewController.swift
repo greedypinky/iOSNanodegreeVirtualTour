@@ -62,7 +62,8 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         newCollectionButton.titleLabel?.font = UIFont.systemFont(ofSize: 18.0)
         newCollectionButton.titleLabel?.lineBreakMode = .byTruncatingTail
         // automatically reset back to the "New Collection" from Remove Selected Pictures if selected
-        newCollectionButton.setTitle(defaultButtonLabel, for: [.selected,.normal,.highlighted])
+        newCollectionButton.titleLabel?.text = defaultButtonLabel
+        newCollectionButton.setTitle(defaultButtonLabel, for: [.selected])
         
         showNewCollectionButton(show:false)
         
@@ -103,9 +104,9 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     //  New Collection 's IBAction method
     @IBAction func getNewCollection(_ sender: Any) {
         if newCollectionButton.titleLabel?.text == defaultButtonLabel {
-            // remove the photos from Core Data first how??
+            // remove all the photos from Core Data
             deletePhotoFromFetchedResult()
-            // fetch new collection
+            // fetch new collection again
             sendGetRequest()
             
         } else {
@@ -115,7 +116,6 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
                 deletePhotoFromRemovedPhotoArray()
                 removePhotos.removeAll()
                 isRemoveMode = false
-                newCollectionButton.setTitle(defaultButtonLabel, for: [.normal,.selected,.highlighted])
             }
         }
     }
@@ -183,7 +183,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     
     private func removePhotosLogic(selectedCellIndexpath:IndexPath, collectionViewCell:PhotoCollectionViewCell ){
         
-        print("add photo indexpath to the array")
+        print("tab photo at collection's indexpath \(selectedCellIndexpath)")
         // Need to check if no added into the array yet, then add
         if !removePhotos.contains(selectedCellIndexpath) {
            removePhotos.append(selectedCellIndexpath)
@@ -202,20 +202,18 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             if removePhotos.count == 0 {
                 //newCollectionButton.setTitle(defaultButtonLabel, for: [.selected,.normal,.highlighted])
                 newCollectionButton.titleLabel?.text = defaultButtonLabel
+                newCollectionButton.setNeedsDisplay()
                 isRemoveMode = false
             }
         }
         
-        print("what is the button title \(newCollectionButton.titleLabel?.text)")
-        print("what is the mode? \(isRemoveMode)")
+        print("what is removedPhoto size? \(removePhotos.count)")
         if removePhotos.count > 0  {
-            print("what is the mode? \(isRemoveMode)")
             newCollectionButton.titleLabel?.text = removeButtonLabel
             isRemoveMode = true
-        } else {
-            newCollectionButton.titleLabel?.text = defaultButtonLabel
-            isRemoveMode = false
         }
+        print("what is the button title \(newCollectionButton.titleLabel?.text)")
+        print("what is the mode? \(isRemoveMode)")
     }
    
     
@@ -339,10 +337,12 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         if removePhotos.count > 0 {
             print("will delete photo from core data!")
             for indexpath in removePhotos {
-                let photoToBeDeleted:NSManagedObject = fetchResultController.object(at: indexpath)
+                let photoToBeDeleted:Photo = fetchResultController.object(at: indexpath)
                 // Need to use the persistenceContainer.viewContext
                 dataController.viewContext.delete(photoToBeDeleted)
-                try! fetchResultController.managedObjectContext.save()
+                try! dataController.viewContext.save()
+                // update the new fetched Result list
+                setupPhotosFetchedResultsController()
             }
             
         }
@@ -351,7 +351,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     
     // MARK: Delete photos from the Fetched Result
     func deletePhotoFromFetchedResult() -> () {
-        
+    
         guard let savedPhotos = fetchResultController.fetchedObjects else {
             print("No Photo in fetchedResults!")
             return
@@ -361,10 +361,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             // Delete each photo from Core Data
             // Need to use the persistenceContainer.viewContext
             dataController.viewContext.delete(photoToBeDeleted)
-            try! fetchResultController.managedObjectContext.save()
-            // delete also from the Feteched result so that the delete is relected in the CollectionView
-            // OR do we just need to re-fetch the results after the data object is deleted from Core Data?
-            fetchResultController.managedObjectContext.delete(photoToBeDeleted)
+            try! dataController.viewContext.save()
         }
     }
     
