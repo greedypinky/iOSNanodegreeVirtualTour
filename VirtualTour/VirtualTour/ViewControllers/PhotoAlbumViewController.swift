@@ -51,6 +51,9 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         view.addSubview(noDataLabel)
         noDataLabel.text = "This pin has no images"
         noDataLabel.textAlignment = NSTextAlignment.center
+        noDataLabel.font = UIFont.systemFont(ofSize: 18.0)
+        noDataLabel.textColor = .black
+        noDataLabel.sizeToFit()
         showNoDataLabel(show: false)
         
         // setup ColllectionView's properties
@@ -61,9 +64,11 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         // setup New Collection button's property
         newCollectionButton.titleLabel?.font = UIFont.systemFont(ofSize: 18.0)
         newCollectionButton.titleLabel?.lineBreakMode = .byTruncatingTail
+        newCollectionButton.sizeToFit()
         // automatically reset back to the "New Collection" from Remove Selected Pictures if selected
         newCollectionButton.titleLabel?.text = defaultButtonLabel
-        newCollectionButton.setTitle(defaultButtonLabel, for: [.selected])
+        // newCollectionButton.setTitle(defaultButtonLabel, for: [.selected])
+        newCollectionButton.setTitle(removeButtonLabel, for: [.normal, .selected, .highlighted])
         
         showNewCollectionButton(show:false)
         
@@ -290,17 +295,18 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             // AND 3. We need to show 'New Collection' button
             showNewCollectionButton(show:true)
         }
-        
-        
-        
     }
-    
-    
     
     func HandlePhotoSave(data:Data?, error:Error?) {
         
         guard let data = data else {
-            fatalError("Unable to get download image : \(error?.localizedDescription)")
+            let ac = UIAlertController(title: "Loading photo error", message: error?.localizedDescription, preferredStyle: UIAlertController.Style.alert)
+            let action = UIAlertAction(title: "OK", style: UIAlertAction.Style.default) { (action) in
+                // tab OK to dismiss Alert Controller
+                self.dismiss(animated: true, completion: nil)
+            }
+            ac.addAction(action)
+            self.present(ac, animated: true, completion: nil)
             return
         }
         
@@ -422,7 +428,13 @@ extension PhotoAlbumViewController:NSFetchedResultsControllerDelegate {
     
     func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange sectionInfo: NSFetchedResultsSectionInfo, atSectionIndex sectionIndex: Int, for type: NSFetchedResultsChangeType) {
         
-        //
+        let indexSet = IndexSet(integer: sectionIndex)
+        switch type {
+        case .insert: photoCollectionView.insertSections(indexSet)
+        case .delete: photoCollectionView.deleteSections(indexSet)
+        case .update, .move:
+            fatalError("Invalid change type in controller(_:didChange:atSectionIndex:for:). Only .insert or .delete should be possible.")
+        }
         
     }
     
@@ -432,9 +444,7 @@ extension PhotoAlbumViewController:NSFetchedResultsControllerDelegate {
     }
     
     func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-        
-        //
-        
+         photoCollectionView.reloadData()
     }
 }
 
