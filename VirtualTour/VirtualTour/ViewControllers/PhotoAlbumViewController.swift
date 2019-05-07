@@ -335,10 +335,12 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     func deletePhotoFromRemovedPhotoArray() {
         
         if removePhotos.count > 0 {
-            print("will delete photo from core data!")
+           
             for indexpath in removePhotos {
+                 print("will delete photo from core data at indexpath \(indexpath)")
                 let photoToBeDeleted:Photo = fetchResultController.object(at: indexpath)
                 // Need to use the persistenceContainer.viewContext
+                
                 dataController.viewContext.delete(photoToBeDeleted)
                 try! dataController.viewContext.save()
                 // update the new fetched Result list
@@ -399,20 +401,19 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
 extension PhotoAlbumViewController:NSFetchedResultsControllerDelegate {
     
     func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
-        
-        //
         switch type {
             
         case .insert:
+            // only insert use the newIndexPath
             photoCollectionView.insertItems(at: [newIndexPath!])
             break
         case .delete:
             // when the fetched results are removed, the colletion view item will be removed
-            // ERROR :Encountered  fatal error here when delete items
-            photoCollectionView.deleteItems(at: [newIndexPath!])
+            // de
+            photoCollectionView.deleteItems(at: [indexPath!])
             break
         case .update:
-           photoCollectionView.reloadItems(at: [newIndexPath!])
+           photoCollectionView.reloadItems(at: [indexPath!])
         case .move:
             photoCollectionView.moveItem(at: indexPath!, to: newIndexPath!)
         }
