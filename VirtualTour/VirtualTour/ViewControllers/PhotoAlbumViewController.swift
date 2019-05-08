@@ -32,6 +32,9 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     override func viewWillAppear(_ animated: Bool) {
         let appDelegate = UIApplication.shared.delegate as! AppDelegate
         dataController = appDelegate.dataController
+        
+        // Show photos if there is persisted data, otherwise fetch from flickr
+        showPhotos()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -75,6 +78,8 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         // Add the location pin for the MapView
         addPin()
         // Show photos if there is persisted data, otherwise fetch from flickr
+        // setupPhotosFetchedResultsController()
+        
         showPhotos()
     }
     
@@ -127,7 +132,8 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     
     // MARK: UICollectionViewDataSource
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-         return fetchResultController.sections?.count ?? 1
+         //return fetchResultController.sections?.count ?? 1
+        return 1
     }
     
     
@@ -438,13 +444,15 @@ extension PhotoAlbumViewController:NSFetchedResultsControllerDelegate {
         
     }
     
+    func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+       
+    }
+    
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
         // reload data
         photoCollectionView.reloadData()
     }
     
-    func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-         photoCollectionView.reloadData()
-    }
+    
 }
 

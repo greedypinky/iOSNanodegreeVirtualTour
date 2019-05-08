@@ -12,6 +12,7 @@ import CoreData
 class DataController {
 
     let persistenceContainer:NSPersistentContainer
+    let backgroundContext:NSManagedObjectContext!
 
     // calculated variable
     var viewContext:NSManagedObjectContext {
@@ -21,6 +22,15 @@ class DataController {
     // modal name = "VirtualTour"
     init(modelName:String) {
         persistenceContainer = NSPersistentContainer(name: modelName)
+        backgroundContext = persistenceContainer.newBackgroundContext()
+    }
+    
+    func configureContexts() {
+        viewContext.automaticallyMergesChangesFromParent = true
+        backgroundContext.automaticallyMergesChangesFromParent = true
+        
+        backgroundContext.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
+        viewContext.mergePolicy = NSMergePolicy.mergeByPropertyStoreTrump
     }
     
     func load(completion: (() -> Void)? = nil) {
@@ -36,6 +46,25 @@ class DataController {
         }
     }
 
+}
+
+extension DataController {
+    func autoSaveViewContext(interval:TimeInterval = 30) {
+        print("autosaving")
+        
+        guard interval > 0 else {
+            print("cannot set negative autosave interval")
+            return
+        }
+        
+        if viewContext.hasChanges {
+            try? viewContext.save()
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + interval) {
+            self.autoSaveViewContext(interval: interval)
+        }
+    }
 }
 
 
