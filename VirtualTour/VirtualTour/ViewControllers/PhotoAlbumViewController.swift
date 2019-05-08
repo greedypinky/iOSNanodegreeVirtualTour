@@ -127,7 +127,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     
     // MARK: UICollectionViewDataSource
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-         return 1
+         return fetchResultController.sections?.count ?? 1
     }
     
     
@@ -140,7 +140,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             showNoDataLabel(show: true)
             return 0
         }
-        
+        print("numberOfITemInSection ? \(sectionInfo?.numberOfObjects)")
         return sectionInfo?.numberOfObjects ?? 1
         
     }
