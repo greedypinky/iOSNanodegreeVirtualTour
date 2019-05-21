@@ -29,17 +29,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     var noDataLabel:UILabel!
     var fetchResultController:NSFetchedResultsController<Photo>!
     
-    override func viewWillAppear(_ animated: Bool) {
-        let appDelegate = UIApplication.shared.delegate as! AppDelegate
-        dataController = appDelegate.dataController
-        
-        // Show photos if there is persisted data, otherwise fetch from flickr
-        showPhotos()
-    }
-    
-    override func viewWillDisappear(_ animated: Bool) {
-        fetchResultController = nil
-    }
+   
     
     /**
      If no images are found a “No Images” label will be displayed.
@@ -47,7 +37,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     */
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+         print("ViewDidLoad!")
         // Setup No Data label
         let frame = CGRect(x: 0, y: 0, width: photoCollectionView.bounds.width, height: photoCollectionView.bounds.height)
         noDataLabel = UILabel(frame: frame)
@@ -69,11 +59,17 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         newCollectionButton.titleLabel?.lineBreakMode = .byTruncatingTail
         newCollectionButton.sizeToFit()
         // automatically reset back to the "New Collection" from Remove Selected Pictures if selected
-        newCollectionButton.titleLabel?.text = defaultButtonLabel
-        // newCollectionButton.setTitle(defaultButtonLabel, for: [.selected])
-        newCollectionButton.setTitle(removeButtonLabel, for: [.normal, .selected, .highlighted])
-        
+        newCollectionButton.setTitle(defaultButtonLabel, for: .normal)
+        newCollectionButton.setTitle(defaultButtonLabel, for: .highlighted)
+        newCollectionButton.setTitle(defaultButtonLabel, for: .selected)
         showNewCollectionButton(show:false)
+        
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        print("ViewWillAppear!")
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        dataController = appDelegate.dataController
         
         // Add the location pin for the MapView
         addPin()
@@ -81,6 +77,10 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         // setupPhotosFetchedResultsController()
         
         showPhotos()
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        fetchResultController = nil
     }
     
     private func showPhotos() {
@@ -91,8 +91,9 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             VirtualTourClient.photoGetRequest(photoSearch: photoSearch, responseType: PhotoSearchResponse.self, completionHandler: handleGetResponse(res:error:))
         } else {
         // If the Photo Album view is opened for a pin that previously had photos assigned, they are immediately displayed. No new download is needed.
-            print("Fetch from core data!")
+            print("we have photo from this PIN, fetch from core data by lat \(pin.lat) and long \(pin.long) ")
             setupPhotosFetchedResultsController()
+            
         }
     }
     
@@ -132,11 +133,15 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     
     // MARK: UICollectionViewDataSource
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-         //return fetchResultController.sections?.count ?? 1
-        return 1
+        print("UICollectionViewDataSource numberOfSections")
+        guard let controller = fetchResultController else {
+            return 1
+        }
+        return controller.sections?.count ?? 1
     }
     
     
+    // https://fangpenlin.com/posts/2016/04/29/uicollectionview-invalid-number-of-items-crash-issue/
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         guard let controller = fetchResultController else {
             return 0
@@ -146,7 +151,8 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             showNoDataLabel(show: true)
             return 0
         }
-        print("numberOfITemInSection ? \(sectionInfo?.numberOfObjects)")
+        showNoDataLabel(show: false)
+        print("UICollectionViewDataSource:numberOfITemInSection ? \(sectionInfo?.numberOfObjects)")
         return sectionInfo?.numberOfObjects ?? 1
         
     }
@@ -211,7 +217,6 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             removePhotos.remove(at: arrayIndex!)
             // check if the array has count = 0
             if removePhotos.count == 0 {
-                //newCollectionButton.setTitle(defaultButtonLabel, for: [.selected,.normal,.highlighted])
                 newCollectionButton.titleLabel?.text = defaultButtonLabel
                 newCollectionButton.setNeedsDisplay()
                 isRemoveMode = false
@@ -300,6 +305,8 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             setupPhotosFetchedResultsController()
             // AND 3. We need to show 'New Collection' button
             showNewCollectionButton(show:true)
+        } else {
+            showNewCollectionButton(show:false)
         }
     }
     
@@ -356,7 +363,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
                 dataController.viewContext.delete(photoToBeDeleted)
                 try! dataController.viewContext.save()
                 // update the new fetched Result list
-                setupPhotosFetchedResultsController()
+                // setupPhotosFetchedResultsController()
             }
             
         }
@@ -383,13 +390,15 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
   
     
     fileprivate func setupPhotosFetchedResultsController() {
+       fetchResultController = nil
        let fetchRequestPhoto:NSFetchRequest<Photo> = Photo.fetchRequest()
+        print("Do we have the pin ?? \(pin.lat) \(pin.long)")
        let predicate = NSPredicate(format: "pin == %@", pin)
        fetchRequestPhoto.predicate = predicate
         let sortDescriptor = NSSortDescriptor(key: "createDate", ascending: true)
         fetchRequestPhoto.sortDescriptors = [sortDescriptor]
 
-        fetchResultController = NSFetchedResultsController(fetchRequest: fetchRequestPhoto, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
+        fetchResultController = NSFetchedResultsController(fetchRequest: fetchRequestPhoto, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: "\(pin)_flickrPhotos")
         fetchResultController.delegate = self
 
         do {
@@ -398,6 +407,11 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             if let count = fetchResultController.fetchedObjects?.count {
                 if count == 0 {
                     print("no photos!")
+                    showNewCollectionButton(show:false)
+                    showNoDataLabel(show: true)
+                } else {
+                    showNewCollectionButton(show:true)
+                    showNoDataLabel(show: false)
                 }
             }
             
@@ -445,9 +459,12 @@ extension PhotoAlbumViewController:NSFetchedResultsControllerDelegate {
     }
     
     func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-       
+         //photoCollectionView.reloadData()
+         photoCollectionView.numberOfItems(inSection: 0)
     }
     
+    // https://stackoverflow.com/questions/19199985/invalid-update-invalid-number-of-items-on-uicollectionview/19202953#19202953
+    // https://fangpenlin.com/posts/2016/04/29/uicollectionview-invalid-number-of-items-crash-issue/
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
         // reload data
         photoCollectionView.reloadData()

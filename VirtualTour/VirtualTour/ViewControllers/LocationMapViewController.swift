@@ -27,27 +27,31 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
     var selectedPinLocationCoordinate:CLLocationCoordinate2D?
     var fetchResultController:NSFetchedResultsController<Pin>!
     
+    //var initfetchResultController:NSFetchedResultsController<Pin>!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
+        print("viewDidLoad")
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        dataController = appDelegate.dataController
+        print("what is the datacontroller? \(dataController)")
+        // initPinFromCoreData()
     }
     
     override func viewWillAppear(_ animated: Bool) {
-        
-        let appDelegate = UIApplication.shared.delegate as! AppDelegate
-        dataController = appDelegate.dataController
-        
+        print("viewWillAppear")
         navigationItem.title = "Virtual Tourist"
         addNavigationButton()
         deletePinButton.isHidden = true
-        
         // Add the right - Edit / Done button
         var longPress = UILongPressGestureRecognizer(target: self, action: #selector(addPinToTheMap))
-        
         // Tapping and holding the map drops a new pin. Users can place any number of pins on the map.
         longPress.minimumPressDuration = 0.5
         mapView.addGestureRecognizer(longPress)
         mapView.delegate = self
+        
+        initPinFromCoreData()
     }
     
     
@@ -200,6 +204,7 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
     
     fileprivate func setupFetchedResultsController(lat:Double,lon:Double) {
         print("Pin: setup fetch result controller!")
+        fetchResultController = nil
         let fetchRequest:NSFetchRequest<Pin> = Pin.fetchRequest()
         // TODO: Need to  update the predicate
         print("predicate is \(lat) and \(lon)")
@@ -212,7 +217,7 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
         fetchRequest.predicate = andPredicate
         let sortDescriptor = NSSortDescriptor(key: "createDate", ascending: true)
         fetchRequest.sortDescriptors = [sortDescriptor]
-        fetchResultController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
+        fetchResultController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: "pins")
         
         fetchResultController.delegate = self
         do {
@@ -226,7 +231,7 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
                 print("we found existing pin")
                 let existingPins:[Pin] = fetchResultController.fetchedObjects!
                 pin = existingPins[0]
-                print("we found existing pin with created date: \(pin.createDate)")
+                print("we found existing pin with created date: \(String(describing: pin.createDate))")
             }
         } catch {
             fatalError("Error when try to fetch the album \(error.localizedDescription)")
@@ -235,6 +240,7 @@ class LocationMapViewController: UIViewController, MKMapViewDelegate , CLLocatio
 
     // Retreive Pins from the Core Data and set the map
     fileprivate func initPinFromCoreData() {
+        print("Get the PIN from Core Data to init the Map!")
         let fetchRequest:NSFetchRequest<Pin> = Pin.fetchRequest()
         let sortDescriptor = NSSortDescriptor(key: "createDate", ascending: true)
         fetchRequest.sortDescriptors = [sortDescriptor]
