@@ -57,6 +57,7 @@ class VirtualTourClient {
         request.httpMethod = "GET"
         let downloadTask = URLSession.shared.dataTask(with: request) { (data, response, error) in
   
+            // first guard we have no error
             guard error == nil else {
                 completionHandler(nil, error)
                 return
@@ -104,8 +105,11 @@ class VirtualTourClient {
                 completionHandler(nil,error)
                 return
             }
-            print("Photo URL has data!")
-            completionHandler(data,nil)
+            
+            DispatchQueue.main.async {
+                print("Photo URL has data!")
+                completionHandler(data,nil)
+            }
         }
         
         // start the download task

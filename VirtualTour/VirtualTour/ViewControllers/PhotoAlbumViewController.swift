@@ -59,9 +59,13 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         newCollectionButton.titleLabel?.lineBreakMode = .byTruncatingTail
         newCollectionButton.sizeToFit()
         // automatically reset back to the "New Collection" from Remove Selected Pictures if selected
+//        newCollectionButton.setTitle(defaultButtonLabel, for: .normal)
+//        newCollectionButton.setTitle(defaultButtonLabel, for: .highlighted)
+//        newCollectionButton.setTitle(defaultButtonLabel, for: .selected)
+//
         newCollectionButton.setTitle(defaultButtonLabel, for: .normal)
-        newCollectionButton.setTitle(defaultButtonLabel, for: .highlighted)
-        newCollectionButton.setTitle(defaultButtonLabel, for: .selected)
+        //newCollectionButton.setTitle(removeButtonLabel, for: .highlighted)
+        //newCollectionButton.setTitle(removeButtonLabel, for: .selected) // once select - toggle to default
         showNewCollectionButton(show:false)
         
     }
@@ -188,13 +192,15 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
      */
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        // TODO: add removal of the item from Collection View
-        
             print("didSelectItem at \(indexPath.row)")
-
-             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as? PhotoCollectionViewCell
-             removePhotosLogic(selectedCellIndexpath: indexPath, collectionViewCell: cell!)
-        
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as? PhotoCollectionViewCell
+            removePhotosLogic(selectedCellIndexpath: indexPath, collectionViewCell: cell!)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
+        print("did DeselectItem at \(indexPath.row)")
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as? PhotoCollectionViewCell
+        removePhotosLogic(selectedCellIndexpath: indexPath, collectionViewCell: cell!)
     }
     
     
@@ -204,29 +210,26 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         // Need to check if no added into the array yet, then add
         if !removePhotos.contains(selectedCellIndexpath) {
            removePhotos.append(selectedCellIndexpath)
-            // show the opacity of the cell
-           collectionViewCell.opacityView.isHidden = false
-            
+            // override isSelected Property to set the Alpha of the image
+           collectionViewCell.isSelected = true
         } else {
             // WHEN user touches the cell again THEN
             // 1. need to remove the cell from array
             // 2. need to set the opacity cell to Hidden to show the picture again
             // 3. if the removePhotos array count is 0, need to reset the buttons
-            collectionViewCell.opacityView.isHidden = true
+            collectionViewCell.isSelected = false
             let arrayIndex = removePhotos.firstIndex(of: selectedCellIndexpath)
             removePhotos.remove(at: arrayIndex!)
-            // check if the array has count = 0
-            if removePhotos.count == 0 {
-                newCollectionButton.titleLabel?.text = defaultButtonLabel
-                newCollectionButton.setNeedsDisplay()
-                isRemoveMode = false
-            }
         }
         
         print("what is removedPhoto size? \(removePhotos.count)")
         if removePhotos.count > 0  {
-            newCollectionButton.titleLabel?.text = removeButtonLabel
+            // newCollectionButton.titleLabel?.text = removeButtonLabel
+            newCollectionButton.setTitle(removeButtonLabel, for: UIControl.State.normal)
             isRemoveMode = true
+        } else {
+            newCollectionButton.setTitle(defaultButtonLabel, for: UIControl.State.normal)
+            isRemoveMode = false
         }
         print("what is the button title \(newCollectionButton.titleLabel?.text)")
         print("what is the mode? \(isRemoveMode)")
@@ -359,7 +362,6 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
                  print("will delete photo from core data at indexpath \(indexpath)")
                 let photoToBeDeleted:Photo = fetchResultController.object(at: indexpath)
                 // Need to use the persistenceContainer.viewContext
-                
                 dataController.viewContext.delete(photoToBeDeleted)
                 try! dataController.viewContext.save()
                 // update the new fetched Result list
@@ -434,7 +436,7 @@ extension PhotoAlbumViewController:NSFetchedResultsControllerDelegate {
             photoCollectionView.insertItems(at: [newIndexPath!])
             break
         case .delete:
-            // when the fetched results are removed, the colletion view item will be removed
+            // when the fetched results are removed, the collection view item will be removed
             // de
             photoCollectionView.deleteItems(at: [indexPath!])
             break
@@ -453,7 +455,7 @@ extension PhotoAlbumViewController:NSFetchedResultsControllerDelegate {
         case .insert: photoCollectionView.insertSections(indexSet)
         case .delete: photoCollectionView.deleteSections(indexSet)
         case .update, .move:
-            fatalError("Invalid change type in controller(_:didChange:atSectionIndex:for:). Only .insert or .delete should be possible.")
+            fatalError("Invalid change type in controller(_:didChange:atSectionIndex:for:). Only .insert or .delete should be possible!")
         }
         
     }
